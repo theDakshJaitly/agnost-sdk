@@ -135,6 +135,11 @@ mock-ingest server → viewer. Both seams (`invoke_agent`, `chat`,
 content visible, then redaction on — same PII question fired twice
 to make the privacy story visible rather than silent.
 
+This is deliberately pointed at a real agent/provider loop, not a
+polished transcript fixture. If Groq or the agent repeats a tool call
+or returns a provider `tool_use_failed` error, the viewer shows that
+signal instead of smoothing it over.
+
 ```bash
 # Make sure .env has OPENAI_API_KEY (Groq key works), OPENAI_BASE_URL,
 # AGNOST_CAPTURE_MODEL — see .env.example.

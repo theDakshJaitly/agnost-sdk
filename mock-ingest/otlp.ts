@@ -113,6 +113,7 @@ export function decodeOtlpTraces(payload: OtlpTracesPayload): ReadableSpanLike[]
           status: s.status?.code !== undefined ? { code: s.status.code, message: s.status.message } : undefined,
           traceId: s.traceId ?? "",
           spanId: s.spanId ?? "",
+          parentSpanId: s.parentSpanId,
         });
       }
     }

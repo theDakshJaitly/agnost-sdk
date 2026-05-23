@@ -46,6 +46,11 @@ export function buildWeatherAgent(opts: BuildAgentOptions): BuiltAgent {
     id: "get_weather",
     description: "Get current weather for a city.",
     inputSchema: z.object({ city: z.string() }),
+    outputSchema: z.object({
+      city: z.string(),
+      temp_c: z.number(),
+      sky: z.string(),
+    }),
     execute: async (ctx) => {
       // Mastra's createTool execute signature has shifted across minors;
       // the input is either passed directly or under `.context`. Tolerate both.
@@ -59,9 +64,9 @@ export function buildWeatherAgent(opts: BuildAgentOptions): BuiltAgent {
     id: "weather-agent",
     name: "weather-agent",
     instructions:
-      "You are a helpful weather assistant. Use the get_weather tool ONCE when " +
-      "the user asks about the weather, then answer in one or two sentences and " +
-      "stop. Do not call the tool more than once per question.",
+      "You are a helpful weather assistant. Use the get_weather tool when " +
+      "weather data would help. If a tool result is available, answer from " +
+      "that result in one or two concise sentences.",
     model: llm(opts.model),
     tools: { weatherTool },
   });

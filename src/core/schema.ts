@@ -37,6 +37,7 @@ export interface CanonicalEvent {
   // Identifiers
   conversation_id: string;
   turn_id: string;
+  parent_turn_id?: string;
 
   // What kind of GenAI operation this span represents.
   operation: OperationKind;
@@ -87,6 +88,7 @@ export interface ReadableSpanLike {
   // Some serializations flatten spanContext to plain fields.
   traceId?: string;
   spanId?: string;
+  parentSpanId?: string;
 }
 
 export interface ReadableSpanEvent {

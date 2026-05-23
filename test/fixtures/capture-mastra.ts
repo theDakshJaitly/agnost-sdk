@@ -28,7 +28,7 @@ if (!process.env["OPENAI_API_KEY"]) {
   process.exit(1);
 }
 
-const MODEL = process.env["AGNOST_CAPTURE_MODEL"] ?? "gpt-4o-mini";
+const MODEL = process.env["AGNOST_CAPTURE_MODEL"] ?? "qwen/qwen3-32b";
 
 // Register our in-memory tracer provider BEFORE building the agent —
 // the OtelBridge captures the global tracer at construction.
@@ -48,6 +48,7 @@ async function run(): Promise<void> {
 
   await agent.generate(
     "What's the weather in Paris today? My email is jane.doe@example.com.",
+    { maxSteps: 2 },
   );
 
   await provider.forceFlush();
@@ -67,6 +68,8 @@ async function run(): Promise<void> {
     status: s.status,
     traceId: s.spanContext().traceId,
     spanId: s.spanContext().spanId,
+    parentSpanId: (s as unknown as { parentSpanContext?: { spanId?: string } })
+      .parentSpanContext?.spanId,
   }));
 
   mkdirSync(dirname(FIXTURE_PATH), { recursive: true });

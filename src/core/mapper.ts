@@ -257,10 +257,10 @@ function assistantTurnFromOutputAttr(attrs: Record<string, unknown>): Conversati
     if (attrs[key] === undefined) continue;
     const parsed = safeJsonParse<RawMessage[]>(attrs[key], []);
     if (!Array.isArray(parsed) || parsed.length === 0) continue;
-    const last = parsed[parsed.length - 1];
-    if (!last) continue;
-    const turn = rawMessageToTurn(last);
-    if (turn.content && turn.content.length > 0) return turn;
+    for (let i = parsed.length - 1; i >= 0; i--) {
+      const turn = rawMessageToTurn(parsed[i] ?? {});
+      if (turn.role === "assistant" && turn.content && turn.content.length > 0) return turn;
+    }
   }
   return undefined;
 }
@@ -391,6 +391,7 @@ export function spanToCanonical(span: ReadableSpanLike): CanonicalEvent {
   return {
     conversation_id: ctx.traceId,
     turn_id: ctx.spanId,
+    parent_turn_id: span.parentSpanId,
     operation,
     model,
     provider,

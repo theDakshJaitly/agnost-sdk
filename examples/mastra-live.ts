@@ -9,7 +9,8 @@
 //
 // Env (already in .env.example): OPENAI_API_KEY, OPENAI_BASE_URL,
 // AGNOST_CAPTURE_MODEL. Works against any OpenAI-compatible endpoint;
-// the default is Groq because it's free.
+// the default is a Groq-hosted Qwen model because it gives the
+// cleanest tool-result → final-answer loop in the free tier.
 
 import { instrument, mastraObservability } from "../src/profiles/mastra.js";
 import { defaultRedactor } from "../src/core/redact.js";
@@ -45,7 +46,7 @@ const handle = instrument({
   redact: closureRedactor,
 });
 
-const MODEL = process.env["AGNOST_CAPTURE_MODEL"] ?? "gpt-4o-mini";
+const MODEL = process.env["AGNOST_CAPTURE_MODEL"] ?? "qwen/qwen3-32b";
 const { agent, mastra } = buildWeatherAgent({
   model: MODEL,
   serviceName: "agnost-demo-mastra",
@@ -65,10 +66,10 @@ function divider(label: string): void {
 async function ask(label: string, prompt: string): Promise<void> {
   stderr(`${DIM}[demo] ${label}: ${prompt}${RESET}`);
   try {
-    // maxSteps caps the agent loop at 2 (one tool call + final answer).
-    // Without this, smaller models often re-invoke the tool repeatedly
-    // instead of synthesizing the response, which floods the viewer
-    // with duplicate execute_tool spans and burns tokens.
+    // maxSteps keeps the real agent loop bounded. Some Groq-hosted
+    // Llama runs repeat tool calls or fail provider-side tool parsing;
+    // the viewer should surface that trace honestly without letting the
+    // demo burn tokens indefinitely.
     await agent.generate(prompt, { maxSteps: 2 });
   } catch (err) {
     // Never let a model error crash the demo — same posture as the

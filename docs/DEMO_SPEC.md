@@ -12,7 +12,7 @@
 - `src/profiles/mastra.ts` — exports `instrument()` (framework baked to `"mastra"`), `OtelBridge`, and `mastraObservability({ serviceName })`. Use these.
 - `src/core/instrument.ts` — `instrument(opts)` returns a handle with `.shutdown()`. Options include `apiKey`, `endpoint` (defaults to Agnost; for the demo pass `http://127.0.0.1:4318`), `serviceName`, `captureContent`, `redact`, identity fields. It registers a `NodeTracerProvider` + `BatchSpanProcessor`. It is idempotent.
 - `mock-ingest/server.ts` — OTLP/HTTP receiver on port `4318` (`POST /v1/traces`), maps spans via `spanToCanonical`, writes NDJSON to stdout. `mock-ingest/viewer.ts` — reads that NDJSON from stdin, pretty-prints grouped conversations with ANSI color. Run together: `npm run ingest | npm run view`.
-- `.env` — already has a working Groq setup: `OPENAI_API_KEY` (Groq key), `OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `AGNOST_CAPTURE_MODEL` (e.g. `llama-3.3-70b-versatile`). The demo must use the **same env contract** — do not hardcode keys or model names.
+- `.env` — already has a working Groq setup: `OPENAI_API_KEY` (Groq key), `OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `AGNOST_CAPTURE_MODEL` (e.g. `qwen/qwen3-32b`). The demo must use the **same env contract** — do not hardcode keys or model names.
 
 ---
 
