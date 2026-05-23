@@ -1,0 +1,70 @@
+{
+  "name": "@agnost/sdk",
+  "version": "0.0.1",
+  "description": "Thin OpenTelemetry pipe for shipping AI agent conversations to Agnost.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vercel": {
+      "types": "./dist/profiles/vercel.d.ts",
+      "import": "./dist/profiles/vercel.js"
+    },
+    "./mastra": {
+      "types": "./dist/profiles/mastra.d.ts",
+      "import": "./dist/profiles/mastra.js"
+    },
+    "./openai": {
+      "types": "./dist/profiles/openai.d.ts",
+      "import": "./dist/profiles/openai.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "bin": {
+    "agnost-init": "./dist/init/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "capture:openai": "tsx --env-file-if-exists=.env test/fixtures/capture-openai.ts",
+    "capture:vercel": "tsx --env-file-if-exists=.env test/fixtures/capture-vercel.ts",
+    "capture:mastra": "tsx --env-file-if-exists=.env test/fixtures/capture-mastra.ts",
+    "ingest": "tsx mock-ingest/server.ts",
+    "view": "tsx mock-ingest/viewer.ts",
+    "view:all": "tsx mock-ingest/viewer.ts --all",
+    "init": "tsx src/init/cli.ts",
+    "demo:mastra": "tsx --env-file-if-exists=.env examples/mastra-live.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.65",
+    "@mastra/core": "^1.36.0",
+    "@mastra/observability": "^1.13.0",
+    "@mastra/otel-bridge": "^1.1.1",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.57.0",
+    "@opentelemetry/instrumentation": "^0.218.0",
+    "@opentelemetry/resources": "^1.30.0",
+    "@opentelemetry/sdk-node": "^0.218.0",
+    "@opentelemetry/sdk-trace-base": "^1.30.0",
+    "@opentelemetry/sdk-trace-node": "^1.30.0",
+    "@opentelemetry/semantic-conventions": "^1.28.0",
+    "ai": "^6.0.190",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "openai": "^6.39.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,107 @@
+[
+  {
+    "name": "chat llama-3.3-70b-versatile",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.system": "groq",
+      "gen_ai.operation.name": "chat",
+      "gen_ai.request.model": "llama-3.3-70b-versatile",
+      "gen_ai.response.model": "llama-3.3-70b-versatile",
+      "gen_ai.response.id": "chatcmpl-0ac68385-f9d9-4e46-b0ea-9a0afb43760e",
+      "gen_ai.usage.input_tokens": 247,
+      "gen_ai.usage.output_tokens": 14,
+      "gen_ai.response.finish_reasons": [
+        "tool_calls"
+      ]
+    },
+    "events": [
+      {
+        "name": "gen_ai.system.message",
+        "attributes": {
+          "role": "system",
+          "content": "You are a helpful weather assistant. Use the tool when asked.",
+          "gen_ai.system": "groq"
+        },
+        "time": [
+          1779471839,
+          279161834
+        ]
+      },
+      {
+        "name": "gen_ai.user.message",
+        "attributes": {
+          "role": "user",
+          "content": "What's the weather in Paris today? My email is jane.doe@example.com.",
+          "gen_ai.system": "groq"
+        },
+        "time": [
+          1779471839,
+          279181709
+        ]
+      },
+      {
+        "name": "gen_ai.choice",
+        "attributes": {
+          "gen_ai.system": "openai",
+          "index": 0,
+          "finish_reason": "tool_calls",
+          "role": "assistant",
+          "tool_calls": "[{\"id\":\"874zr6f49\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\":\\\"Paris\\\"}\"}}]"
+        },
+        "time": [
+          1779471839,
+          668475334
+        ]
+      }
+    ],
+    "startTime": [
+      1779471839,
+      279000000
+    ],
+    "endTime": [
+      1779471839,
+      668550250
+    ],
+    "status": {
+      "code": 1
+    },
+    "traceId": "53b5775429397b41e9b09926a2d94ac4",
+    "spanId": "2388d227da7dfd2e"
+  },
+  {
+    "name": "execute_tool get_weather",
+    "kind": 0,
+    "attributes": {
+      "gen_ai.operation.name": "execute_tool",
+      "gen_ai.tool.name": "get_weather",
+      "gen_ai.tool.call.id": "call_demo_1",
+      "gen_ai.tool.result": "{\"city\":\"Paris\",\"temp_c\":17,\"sky\":\"cloudy\"}"
+    },
+    "events": [
+      {
+        "name": "gen_ai.tool.message",
+        "attributes": {
+          "role": "tool",
+          "content": "{\"city\":\"Paris\"}"
+        },
+        "time": [
+          1779471839,
+          669129042
+        ]
+      }
+    ],
+    "startTime": [
+      1779471839,
+      669000000
+    ],
+    "endTime": [
+      1779471839,
+      669147042
+    ],
+    "status": {
+      "code": 1
+    },
+    "traceId": "14803128d1ba5055eac1bc5fe3dd9db1",
+    "spanId": "6f3fad2cefe41bb6"
+  }
+]
