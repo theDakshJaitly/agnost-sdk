@@ -18,6 +18,7 @@ import type { CanonicalEvent } from "../src/core/schema.js";
 
 const SHOW_ALL = process.argv.includes("--all");
 const FLUSH_DELAY_MS = 150;
+const RULE = "─".repeat(72);
 
 const RESET = "\x1b[0m";
 const DIM = "\x1b[2m";
@@ -33,6 +34,8 @@ const FG = {
 } as const;
 
 const seenConversations = new Set<string>();
+let renderedConversations = 0;
+let renderedSpans = 0;
 
 function opColor(op: CanonicalEvent["operation"]): string {
   switch (op) {
@@ -69,7 +72,9 @@ function header(e: CanonicalEvent, depth = 0): string {
   ]
     .filter((s): s is string => typeof s === "string" && s.length > 0)
     .join(" · ");
-  return `${marker} ${color}${BOLD}${e.operation}${RESET}  ${DIM}conv=${cid}${RESET}  ${meta}`;
+  const op = `${color}${BOLD}${e.operation}${RESET}`;
+  const dimMeta = [meta, `conv=${cid}`].filter(Boolean).join("  ");
+  return `${marker} ${op}${dimMeta ? `  ${DIM}${dimMeta}${RESET}` : ""}`;
 }
 
 function body(e: CanonicalEvent, depth = 0): string {
@@ -83,6 +88,7 @@ function body(e: CanonicalEvent, depth = 0): string {
     );
   }
   for (const t of e.turns ?? []) {
+    if (t.role === "system") continue;
     const role = t.role.padEnd(9);
     const content = (t.content ?? "").trim().replace(/\s+/g, " ");
     const truncated = content.length > 120 ? content.slice(0, 117) + "…" : content;
@@ -180,6 +186,11 @@ function renderTree(events: CanonicalEvent[]): void {
 
   const visible = SHOW_ALL ? events : events.filter((e) => e.operation !== "other");
   const otherCount = SHOW_ALL ? 0 : events.length - visible.length;
+  if (visible.length === 0 && otherCount === 0) return;
+  if (renderedConversations > 0) process.stdout.write(`\n${DIM}${RULE}${RESET}\n\n`);
+  renderedConversations += 1;
+  renderedSpans += events.length;
+
   const sorted = [...visible].sort(compareEvents);
   const ids = new Set(sorted.map((e) => e.turn_id));
   const children = new Map<string, CanonicalEvent[]>();
@@ -243,7 +254,7 @@ function scheduleFlush(conversationId: string): void {
 }
 
 const rl = createInterface({ input: process.stdin });
-process.stdout.write(`${DIM}[viewer] waiting for events on stdin…${RESET}\n`);
+process.stderr.write(`${DIM}[viewer] waiting for events on stdin…${RESET}\n`);
 
 rl.on("line", (line) => {
   if (!line.trim()) return;
@@ -264,5 +275,10 @@ rl.on("line", (line) => {
 
 rl.on("close", () => {
   for (const conversationId of [...buffers.keys()]) flushConversation(conversationId);
+  if (renderedConversations > 0) {
+    process.stderr.write(
+      `${DIM}agnost · ${renderedConversations} conversation${renderedConversations === 1 ? "" : "s"} · ${renderedSpans} span${renderedSpans === 1 ? "" : "s"}${RESET}\n`,
+    );
+  }
   process.exit(0);
 });

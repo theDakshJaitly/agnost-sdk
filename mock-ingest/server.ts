@@ -17,6 +17,7 @@ import { spanToCanonical } from "../src/core/mapper.js";
 import { decodeOtlpTraces, type OtlpTracesPayload } from "./otlp.js";
 
 const PORT = Number(process.env["AGNOST_MOCK_INGEST_PORT"] ?? 4318);
+const VERBOSE = process.env["AGNOST_MOCK_INGEST_VERBOSE"] === "1";
 
 function send(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "Content-Type": "application/json" });
@@ -59,7 +60,9 @@ function handleTraces(req: IncomingMessage, res: ServerResponse): Promise<void> 
       }
     }
     send(res, 200, { partialSuccess: {} });
-    process.stderr.write(`[mock-ingest] received ${spans.length} span(s), emitted ${emitted} event(s)\n`);
+    if (VERBOSE) {
+      process.stderr.write(`[mock-ingest] received ${spans.length} span(s), emitted ${emitted} event(s)\n`);
+    }
   });
 }
 
