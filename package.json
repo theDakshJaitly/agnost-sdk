@@ -42,7 +42,8 @@
     "view": "tsx mock-ingest/viewer.ts",
     "view:all": "tsx mock-ingest/viewer.ts --all",
     "init": "tsx src/init/cli.ts",
-    "demo:mastra": "tsx --env-file-if-exists=.env examples/mastra-live.ts"
+    "demo:mastra": "tsx --env-file-if-exists=.env examples/mastra-live.ts",
+    "demo:mastra:repl": "tsx --env-file-if-exists=.env examples/mastra-repl.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.65",

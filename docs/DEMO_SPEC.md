@@ -114,4 +114,4 @@ Once the fixed demo works and is committed, add an interactive variant (e.g. `de
 - [ ] Existing tests + `capture-mastra.ts` still pass/work.
 
 **Interactive (stretch, after commit):**
-- [ ] REPL variant reusing the same pipe; thin wrapper over the fixed run logic.
+- [x] REPL variant reusing the same pipe; thin wrapper over the fixed run logic.

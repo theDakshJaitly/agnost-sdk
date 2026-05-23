@@ -149,6 +149,9 @@ npm run ingest | npm run view
 
 # Terminal 2 — fire the agent:
 npm run demo:mastra
+
+# Optional interactive mode:
+npm run demo:mastra:repl
 ```
 
 The viewer hides framework-internal lifecycle spans (Mastra's
@@ -164,6 +167,9 @@ demo's spans get dropped with a quiet `[agnost] export failed` log,
 the agent still produces its model output, and the process exits
 cleanly. That's the SDK's never-throw invariant working as designed,
 not an error.
+
+Interactive mode reuses the same pipe and agent. Type prompts at the
+`you>` prompt; use `/redact on`, `/redact off`, or `/exit`.
 
 ### Capture-script demos (fixture generation)
 
