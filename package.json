@@ -18,6 +18,10 @@
       "types": "./dist/profiles/mastra.d.ts",
       "import": "./dist/profiles/mastra.js"
     },
+    "./langgraph": {
+      "types": "./dist/profiles/langgraph.d.ts",
+      "import": "./dist/profiles/langgraph.js"
+    },
     "./openai": {
       "types": "./dist/profiles/openai.d.ts",
       "import": "./dist/profiles/openai.js"
@@ -38,12 +42,15 @@
     "capture:openai": "tsx --env-file-if-exists=.env test/fixtures/capture-openai.ts",
     "capture:vercel": "tsx --env-file-if-exists=.env test/fixtures/capture-vercel.ts",
     "capture:mastra": "tsx --env-file-if-exists=.env test/fixtures/capture-mastra.ts",
+    "capture:langgraph": "uv run --env-file .env test/fixtures/capture-langgraph.py",
+    "divergence-report": "tsx scripts/divergence-report.ts",
     "ingest": "tsx mock-ingest/server.ts",
     "view": "tsx mock-ingest/viewer.ts",
     "view:all": "tsx mock-ingest/viewer.ts --all",
     "init": "tsx src/init/cli.ts",
     "demo:mastra": "tsx --env-file-if-exists=.env examples/mastra-live.ts",
-    "demo:mastra:repl": "tsx --env-file-if-exists=.env examples/mastra-repl.ts"
+    "demo:mastra:repl": "tsx --env-file-if-exists=.env examples/mastra-repl.ts",
+    "demo:langgraph": "uv run --env-file .env examples/langgraph-live.py"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.65",

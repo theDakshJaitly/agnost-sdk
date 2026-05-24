@@ -1,6 +1,6 @@
 # REASONING.md — Agnost SDK (Track B)
 
-The integration question isn't "how do we capture agent conversations." The frameworks already capture them — Vercel AI SDK, Mastra, and (via instrumentation) OpenAI all emit OpenTelemetry. The real question is **how little we can ask a developer to do to get that data flowing into Agnost, without ever putting Agnost in a position to slow or break their agent.** So this SDK is deliberately *not* a capture library. It's a thin, reliable **OTel pipe**: observe the spans the framework already emits, tag them with identity, optionally redact content, ship them out of band. Everything that interprets the data — clustering, intent, evals — lives server-side, where it can change without a customer redeploy.
+The integration question isn't "how do we capture agent conversations." The frameworks already capture them — Vercel AI SDK, Mastra, LangGraph (via the Azure OTel tracer), and OpenAI instrumentation all emit OpenTelemetry. The real question is **how little we can ask a developer to do to get that data flowing into Agnost, without ever putting Agnost in a position to slow or break their agent.** So this SDK is deliberately *not* a capture library. It's a thin, reliable **OTel pipe**: observe the spans the framework already emits, tag them with identity, optionally redact content, ship them out of band. Everything that interprets the data — clustering, intent, evals — lives server-side, where it can change without a customer redeploy.
 
 The bet underneath: ride the open standard so supported-framework coverage grows with the ecosystem instead of with our integration backlog. The honest catch — and the most interesting part of the build — is that the GenAI conventions are still stabilizing in 2026, so "ride the standard" required a real normalization layer to absorb how each framework currently *diverges* from it. That layer is the heart of the repo, and `docs/FINDINGS.md` is the empirical evidence behind every line of it.
 
@@ -8,23 +8,7 @@ The bet underneath: ride the open standard so supported-framework coverage grows
 
 ## Architecture
 
-```
-   Host agent process                                  Agnost (server-side)
- ┌─────────────────────────────────────────┐         ┌──────────────────────┐
- │  Vercel AI SDK / Mastra / OpenAI         │         │  conversation         │
- │        │ emits OTel GenAI spans          │         │  stitching, topic     │
- │        ▼                                 │         │  clustering, intent,  │
- │  ┌───────────── @agnost/sdk ──────────┐  │  OTLP   │  sentiment, evals,    │
- │  │ instrument()                       │  │  /HTTP  │  dashboards           │
- │  │  ├─ tag    identity (agnost.*)     │──┼────────▶│                      │
- │  │  ├─ redact content gate (opt-in)   │  │  raw    │  (raw spans = the     │
- │  │  └─ ship   BatchSpanProcessor      │  │  spans  │   ground-truth asset) │
- │  │            + never-throw exporter  │  │         └──────────────────────┘
- │  └────────────────────────────────────┘  │
- └─────────────────────────────────────────┘
-   The client does four things only:
-   observe · tag · (optionally) redact · ship.
-```
+![Agnost SDK thin client architecture](./architecture.svg)
 
 The client is intentionally dumb. `instrument()` registers a `NodeTracerProvider`, wraps a `BatchSpanProcessor` so export is off the host's request path, stamps `agnost.*` identity on span start, applies the content policy on span end, and exports via a retrying OTLP/HTTP wrapper that **swallows every failure**. The mapper that projects spans into a friendly `CanonicalEvent` is used for tests and demo readability — it is *not* in the ingest path; what ships to Agnost is the raw spans, losslessly.
 
@@ -38,7 +22,7 @@ The client is intentionally dumb. `instrument()` registers a `NodeTracerProvider
 | Transport | Out-of-band OTLP/HTTP via batch processor | **Proxy / drop-in `baseURL`** — puts Agnost in the model-request hot path, so the customer's agent availability now depends on *our* uptime. Unacceptable risk for an observability vendor |
 | Where interpretation lives | Server-side; client ships raw | **Client-side normalization** — client logic is frozen at the installed version (server fixes ship instantly; client fixes need every customer to upgrade), runs in the hot path, and would discard the raw signal that *is* Agnost's product |
 | Normalization shape | One mapper, three data tables | **Per-framework mapper branches** — collapses the moment divergence appears; tables let the *code* stay constant while only the data shrinks as OTel matures |
-| Language | TypeScript / Node | **Python** — all three targets are TS-first (Mastra is TS-only); meet the ecosystem where it lives |
+| Language | TypeScript / Node for the weekend SDK | **Full Python SDK now** — OpenAI/Vercel/Mastra were the original TS-first targets; the LangGraph fixture proves the mapper thesis via Python OTel spans, while a production Python SDK remains month-scale work |
 
 A note on intellectual honesty rather than marketing: the OTel **GenAI conventions are experimental, not stable**. We bet on the *direction*, not on today's coverage. The normalization tables are the bridge across that gap, and they are designed to shrink to nothing as the standard wins.
 
@@ -58,11 +42,12 @@ There's a second reason specific to *this* company: **the raw data is the moat.*
 
 ## What the build actually found (and why it's the interesting part)
 
-The thesis "all three speak OTel" turned out to be true but uneven — they speak *dialects*. This is the empirical core, captured as **real spans** (no synthetic fixtures; the mapper test fails loudly if fixtures are missing) and documented in `docs/FINDINGS.md`:
+The thesis "frameworks speak OTel" turned out to be true but uneven — they speak *dialects*. This is the empirical core, captured as **real spans** (no synthetic fixtures; the mapper test fails loudly if fixtures are missing) and documented in `docs/FINDINGS.md`:
 
 - **OpenAI** (standards baseline): clean `gen_ai.*` attributes; content on span *events*; tool calls JSON-stringified (OTel attributes disallow nested objects). Divergences from canonical assumptions: none.
-- **Vercel AI SDK**: the framework that motivated the alias table. A single `generateText` call emits **three spans** — an outer `ai.generateText` *wrapper*, an inner `ai.generateText.doGenerate` *inference* span, and `ai.toolCall`. Mapping both generate spans to `chat` would **double-count turns and tokens** — so the wrapper maps to `invoke_agent` (trace linkage, no turns), only the inner span produces turns. Vercel also omits `gen_ai.operation.name` (we fall back to span-name patterns), puts content on JSON attributes instead of events (`ai.prompt.messages`), and reports the provider as `"openai.responses"` — a framework-internal namespace we normalize back to `"openai"`.
-- **Mastra**: OTel lives in a *separate* `@mastra/otel-bridge` package, not in core — looking at core alone wrongly suggests Mastra has no OTel. Once bridged, a single `agent.generate` produced **27 spans** — `invoke_agent`, `chat`, five `execute_tool`, and internal lifecycle markers that correctly fall to `other`. This is the **agent seam** the SDK most wants: intent lives in the agent loop, not just the raw completion. Mastra spells provider as `gen_ai.provider.name` and uses a `parts[].content` message shape vs Vercel's `content[].text` — one flatten helper accepts both.
+- **Vercel AI SDK**: the framework that motivated the alias table. A single `generateText` call emits **three spans** — an outer `ai.generateText` *wrapper*, an inner `ai.generateText.doGenerate` *inference* span, and `ai.toolCall`. Mapping both generate spans to `chat` would **double-count turns and tokens** — so the wrapper maps to `invoke_agent` (trace linkage, no turns), only the inner span produces turns. Vercel also omits `gen_ai.operation.name` (we fall back to span-name patterns), puts content on JSON attributes instead of events (`ai.prompt.messages`), and reports provider namespace as the SDK adapter (`"openai.responses"`), not necessarily the resolved endpoint host. That adapter namespace propagates through Mastra too: a Groq-backed call can still report `"openai.responses"`. The mapper normalizes this to `"openai"` for readability, while true provider resolution is server-side enrichment and deliberately out of scope for the thin client.
+- **Mastra**: OTel lives in a *separate* `@mastra/otel-bridge` package, not in core — looking at core alone wrongly suggests Mastra has no OTel. Once bridged, an early Llama-on-Groq fixture produced **27 spans** — `invoke_agent`, `chat`, five `execute_tool`, and internal lifecycle markers that correctly fall to `other`. This is the **agent seam** the SDK most wants: intent lives in the agent loop, not just the raw completion. Later live runs with a more reliable Groq tool-calling model produced cleaner one-tool-call loops, which is exactly why the raw trace is useful: it distinguishes model behavior from SDK behavior. Mastra spells provider as `gen_ai.provider.name` and uses a `parts[].content` message shape vs Vercel's `content[].text` — one flatten helper accepts both.
+- **LangGraph**: the verified path is specifically Microsoft's `langchain-azure-ai` `AzureAIOpenTelemetryTracer`, not LangSmith's OpenLLMetry path. A real LangGraph tool-using run emitted **10 spans** — `invoke_agent` wrappers, two `chat` calls, and one `execute_tool`. Zero spans fell to `other`; the second chat carried the final assistant answer in `gen_ai.output.messages`. The only mapper extensions were generic GenAI support: fold `gen_ai.system_instructions` into a system turn and accept `gen_ai.tool.call.result` as a tool-result alias.
 
 All of this is absorbed by **three data tables** in a single mapper — `OPERATION_NAME_PATTERNS`, `ATTRIBUTE_ALIASES`, and a provider-normalization set. The consuming code is identical no matter which framework emitted the span; divergence is *data*, not branches. As each framework adopts the standard, table entries are deleted and the code is untouched. That is the testable form of "thin client riding the open standard."
 
@@ -70,7 +55,11 @@ All of this is absorbed by **three data tables** in a single mapper — `OPERATI
 
 ## Onboarding: the funnel is the product
 
-Integration friction is adoption lost. `npx agnost-init` detects the framework from `package.json` and prints exactly what to add — the two-minute path made literal. The repo also ships a mock OTLP ingest server + viewer so the whole loop is runnable end-to-end with **zero API keys** (capture uses real provider calls for fixtures, but the demo path does not require them).
+Integration friction is adoption lost. `npx agnost-init` detects the framework from `package.json` and prints exactly what to add — the two-minute path made literal.
+
+The repo also includes live proofs, not just fixtures: `npm run demo:mastra` runs a real Mastra weather agent against a real Groq-hosted model, sends the genuine OTel spans through `instrument()` into the mock OTLP ingest server, and renders the resulting agent loop in the viewer. It shows both seams the SDK cares about — inference (`chat`) and agent behavior (`invoke_agent` / `execute_tool`) — with real latency and token counts. The demo also flips the redaction seam live: the first pass shows content with capture explicitly enabled, the second replays the PII prompt with the default redactor on so the email is scrubbed before export. `npm run demo:langgraph` proves the same viewer/mapper path against LangGraph's Azure tracer.
+
+That live demo did something more useful than looking pretty: pointed at a real agent, it immediately surfaced a model-specific tool-calling failure. Llama-on-Groq repeatedly called the same tool and never summarized; switching to a more reliable Groq tool-calling model produced the expected one-tool-call + final-answer loop. That is the product premise in miniature — observability should expose broken agent loops, not hide them.
 
 The vision this points at: the observability layer that wins won't be the one with the *most* integrations — it'll be the one that needs the *fewest*, because everything speaks OTel and onboarding collapses to "you already emit the spans; point them at us." Distribution then rides the standard — framework-native plugins, templates so new agents are born instrumented, and an MCP server so an agent can query *its own* analytics.
 
@@ -81,7 +70,7 @@ The vision this points at: the observability layer that wins won't be the one wi
 - **Server-side processing pipeline** — the actual conversation stitching (spans → coherent multi-turn threads across the agent loop), topic clustering, intent extraction, sentiment, and evals. This is where the raw-signal bet pays off, and it's deliberately *not* in the weekend client.
 - **`agnost-init` as a codemod** — not just print the snippet, but AST-rewrite it in safely.
 - **Sampling + cost controls** — head/tail sampling, compression, per-project budgets — the principled answer to the bandwidth objection.
-- **Coverage by riding the standard** — LangGraph, CrewAI, Agno, and others come almost for free as they emit OTel; each new framework should be table entries (or zero), not a new pipeline.
+- **Coverage by riding the standard** — CrewAI, Agno, and others should come almost for free as they emit OTel; LangGraph was the proof case, needing table entries rather than a new pipeline.
 - **A real redaction policy engine** — pluggable, with structured-PII and LLM-based options, replacing the deliberately-narrow default.
 - **A Python SDK** — same thin-pipe design, for the non-TS half of the ecosystem.
 - **Filter bridge-shutdown warning noise** (`[OtelBridge] No OTEL span found…`) so it never reaches customer logs.
@@ -90,6 +79,6 @@ The vision this points at: the observability layer that wins won't be the one wi
 
 ## Honest status of this submission
 
-What works, verified: typecheck clean; **38/38 tests pass** across mapper (against three real fixtures), transport (retry/backoff), redaction, and degradation (host survives an unreachable Agnost). All three profiles, the init CLI, and the mock ingest are implemented.
+What works, verified: typecheck clean; **44/44 tests pass** across mapper (against four real fixtures), transport (retry/backoff), redaction, and degradation (host survives an unreachable Agnost). All four profiles, the init CLI, the live Mastra demo/REPL, the live LangGraph demo, and the mock ingest/viewer are implemented.
 
-Known issue to fix before any real publish: a clean `npm install` hits a peer-dependency conflict (`openai@4` wants `zod@^3`; the project pins `zod@^4`) — it installs with `--legacy-peer-deps`, but the right fix is to align the `zod` range or move the `openai` dep. Flagging it rather than hiding it, because "did you run it from clean" is exactly the kind of thing that should be surfaced, not papered over.
+The earlier clean-install peer-dependency issue has been resolved; `npm install --package-lock-only --ignore-scripts` now resolves successfully in a clean check. Remaining install output is ordinary engine/audit warning noise, not a dependency blocker.

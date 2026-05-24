@@ -20,7 +20,7 @@ import {
   SimpleSpanProcessor,
   type ReadableSpan,
 } from "@opentelemetry/sdk-trace-base";
-import { generateText, tool } from "ai";
+import { generateText, stepCountIs, tool } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
@@ -60,6 +60,7 @@ async function run(): Promise<void> {
         execute: async ({ city }) => ({ city, temp_c: 17, sky: "cloudy" }),
       }),
     },
+    stopWhen: stepCountIs(2),
     // The whole point of capturing through the SDK: telemetry on, content
     // recorded so the fixture has real prompts/responses.
     experimental_telemetry: {

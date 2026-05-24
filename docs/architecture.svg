@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="540" viewBox="0 0 1180 540" role="img" aria-labelledby="title desc">
+  <title id="title">Agnost SDK thin client architecture</title>
+  <desc id="desc">Host agent frameworks emit OpenTelemetry GenAI spans into the Agnost SDK, which observes, tags, redacts, and ships raw OTLP spans to Agnost server-side processing.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6472"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#17202a" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .panel { stroke-width: 1.5; rx: 18; }
+      .host { fill: #f5f7fa; stroke: #5b7a99; }
+      .agnost { fill: #eef6f0; stroke: #3d8b5f; }
+      .sdk { fill: #ffffff; stroke: #7b8da3; }
+      .node { fill: #ffffff; stroke: #b7c3d0; stroke-width: 1.2; rx: 12; filter: url(#shadow); }
+      .serverNode { fill: #ffffff; stroke: #92b99f; stroke-width: 1.2; rx: 12; filter: url(#shadow); }
+      .title { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #1a2733; }
+      .label { font: 600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #1a2733; }
+      .small { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #4d5b6b; }
+      .tiny { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #5f6b7a; }
+      .edge { stroke: #5b6472; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .ship { stroke: #2f7f5b; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="30" y="34" width="700" height="470" class="panel host"/>
+  <text x="60" y="74" class="title">Host agent process (customer runtime)</text>
+
+  <rect x="70" y="112" width="250" height="96" class="node"/>
+  <text x="195" y="147" text-anchor="middle" class="label">Agent frameworks</text>
+  <text x="195" y="174" text-anchor="middle" class="small">Vercel AI SDK · Mastra</text>
+  <text x="195" y="194" text-anchor="middle" class="small">OpenAI SDK</text>
+
+  <rect x="390" y="88" width="300" height="372" class="panel sdk"/>
+  <text x="540" y="126" text-anchor="middle" class="title">@agnost/sdk — thin client</text>
+
+  <rect x="430" y="154" width="220" height="56" class="node"/>
+  <text x="540" y="177" text-anchor="middle" class="label">1 · observe</text>
+  <text x="540" y="197" text-anchor="middle" class="small">register tracer + batch processor</text>
+
+  <rect x="430" y="232" width="220" height="56" class="node"/>
+  <text x="540" y="255" text-anchor="middle" class="label">2 · tag</text>
+  <text x="540" y="275" text-anchor="middle" class="small">stamp agnost.* identity</text>
+
+  <rect x="430" y="310" width="220" height="72" class="node"/>
+  <text x="540" y="333" text-anchor="middle" class="label">3 · redact</text>
+  <text x="540" y="353" text-anchor="middle" class="small">content gate, opt-in</text>
+  <text x="540" y="371" text-anchor="middle" class="tiny">the one client-side exception</text>
+
+  <rect x="430" y="404" width="220" height="56" class="node"/>
+  <text x="540" y="427" text-anchor="middle" class="label">4 · ship</text>
+  <text x="540" y="447" text-anchor="middle" class="small">never-throw exporter</text>
+
+  <path d="M 320 160 C 350 160, 360 182, 420 182" class="edge"/>
+  <text x="352" y="142" class="tiny">emits OTel GenAI spans</text>
+  <path d="M 540 210 L 540 232" class="edge"/>
+  <path d="M 540 288 L 540 310" class="edge"/>
+  <path d="M 540 382 L 540 404" class="edge"/>
+
+  <rect x="800" y="74" width="330" height="350" class="panel agnost"/>
+  <text x="965" y="114" text-anchor="middle" class="title">Agnost (server-side)</text>
+
+  <rect x="840" y="154" width="250" height="110" class="serverNode"/>
+  <text x="965" y="184" text-anchor="middle" class="label">conversation stitching</text>
+  <text x="965" y="210" text-anchor="middle" class="small">topic clustering · intent</text>
+  <text x="965" y="232" text-anchor="middle" class="small">sentiment · evals · dashboards</text>
+
+  <rect x="840" y="304" width="250" height="88" class="serverNode"/>
+  <text x="965" y="334" text-anchor="middle" class="label">raw spans = ground truth</text>
+  <text x="965" y="360" text-anchor="middle" class="small">interpretation lives here</text>
+  <text x="965" y="380" text-anchor="middle" class="small">no customer redeploy</text>
+
+  <path d="M 650 432 C 720 432, 720 210, 832 210" class="ship"/>
+  <text x="716" y="250" class="small">raw OTLP spans / HTTP</text>
+  <text x="716" y="272" class="small">out of band · never blocks</text>
+</svg>

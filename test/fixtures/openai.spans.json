@@ -1,15 +1,15 @@
 [
   {
-    "name": "chat llama-3.3-70b-versatile",
+    "name": "chat qwen/qwen3-32b",
     "kind": 2,
     "attributes": {
       "gen_ai.system": "groq",
       "gen_ai.operation.name": "chat",
-      "gen_ai.request.model": "llama-3.3-70b-versatile",
-      "gen_ai.response.model": "llama-3.3-70b-versatile",
-      "gen_ai.response.id": "chatcmpl-0ac68385-f9d9-4e46-b0ea-9a0afb43760e",
-      "gen_ai.usage.input_tokens": 247,
-      "gen_ai.usage.output_tokens": 14,
+      "gen_ai.request.model": "qwen/qwen3-32b",
+      "gen_ai.response.model": "qwen/qwen3-32b",
+      "gen_ai.response.id": "chatcmpl-8413856d-4f08-40ff-a172-ce56e4c7fe94",
+      "gen_ai.usage.input_tokens": 183,
+      "gen_ai.usage.output_tokens": 115,
       "gen_ai.response.finish_reasons": [
         "tool_calls"
       ]
@@ -23,8 +23,8 @@
           "gen_ai.system": "groq"
         },
         "time": [
-          1779471839,
-          279161834
+          1779615823,
+          23195333
         ]
       },
       {
@@ -35,8 +35,8 @@
           "gen_ai.system": "groq"
         },
         "time": [
-          1779471839,
-          279181709
+          1779615823,
+          23216000
         ]
       },
       {
@@ -46,27 +46,27 @@
           "index": 0,
           "finish_reason": "tool_calls",
           "role": "assistant",
-          "tool_calls": "[{\"id\":\"874zr6f49\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\":\\\"Paris\\\"}\"}}]"
+          "tool_calls": "[{\"id\":\"qzvk7zn8y\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\":\\\"Paris\\\"}\"}}]"
         },
         "time": [
-          1779471839,
-          668475334
+          1779615823,
+          650782333
         ]
       }
     ],
     "startTime": [
-      1779471839,
-      279000000
+      1779615823,
+      23000000
     ],
     "endTime": [
-      1779471839,
-      668550250
+      1779615823,
+      650821625
     ],
     "status": {
       "code": 1
     },
-    "traceId": "53b5775429397b41e9b09926a2d94ac4",
-    "spanId": "2388d227da7dfd2e"
+    "traceId": "fea31835745ddfedfbb518e2b0aaa87e",
+    "spanId": "980c63827c4a6638"
   },
   {
     "name": "execute_tool get_weather",
@@ -85,23 +85,114 @@
           "content": "{\"city\":\"Paris\"}"
         },
         "time": [
-          1779471839,
-          669129042
+          1779615823,
+          651076833
         ]
       }
     ],
     "startTime": [
-      1779471839,
-      669000000
+      1779615823,
+      651000000
     ],
     "endTime": [
-      1779471839,
-      669147042
+      1779615823,
+      651085833
     ],
     "status": {
       "code": 1
     },
-    "traceId": "14803128d1ba5055eac1bc5fe3dd9db1",
-    "spanId": "6f3fad2cefe41bb6"
+    "traceId": "77645723e5f6b36c885ef2350428a6d3",
+    "spanId": "c22c6f5c24c87674"
+  },
+  {
+    "name": "chat qwen/qwen3-32b",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.system": "groq",
+      "gen_ai.operation.name": "chat",
+      "gen_ai.request.model": "qwen/qwen3-32b",
+      "gen_ai.response.model": "qwen/qwen3-32b",
+      "gen_ai.response.id": "chatcmpl-f63e8f95-1076-4602-8186-668e1038eee9",
+      "gen_ai.usage.input_tokens": 91,
+      "gen_ai.usage.output_tokens": 152,
+      "gen_ai.response.finish_reasons": [
+        "stop"
+      ]
+    },
+    "events": [
+      {
+        "name": "gen_ai.system.message",
+        "attributes": {
+          "role": "system",
+          "content": "You are a helpful weather assistant. Use the tool when asked.",
+          "gen_ai.system": "groq"
+        },
+        "time": [
+          1779615823,
+          651050500
+        ]
+      },
+      {
+        "name": "gen_ai.user.message",
+        "attributes": {
+          "role": "user",
+          "content": "What's the weather in Paris today? My email is jane.doe@example.com.",
+          "gen_ai.system": "groq"
+        },
+        "time": [
+          1779615823,
+          651058375
+        ]
+      },
+      {
+        "name": "gen_ai.assistant.message",
+        "attributes": {
+          "role": "assistant"
+        },
+        "time": [
+          1779615823,
+          651061541
+        ]
+      },
+      {
+        "name": "gen_ai.tool.message",
+        "attributes": {
+          "role": "tool",
+          "content": "{\"city\":\"Paris\",\"temp_c\":17,\"sky\":\"cloudy\"}",
+          "gen_ai.system": "groq"
+        },
+        "time": [
+          1779615823,
+          651064125
+        ]
+      },
+      {
+        "name": "gen_ai.choice",
+        "attributes": {
+          "gen_ai.system": "groq",
+          "index": 0,
+          "finish_reason": "stop",
+          "role": "assistant",
+          "content": "<think>\nOkay, the user asked for the weather in Paris today. I called the get_weather tool with Paris as the city. The response came back with a temperature of 17°C and cloudy skies. Now I need to present this information clearly. Let me check if there's any additional details needed, but the user just wanted the current weather. They also provided their email, maybe for a follow-up, but the question is straightforward. I'll format the answer to include the city, temperature, and sky condition. Make sure to mention the units for temperature. Keep it concise and friendly.\n</think>\n\nThe weather in Paris today is **17°C** with **cloudy** skies. Let me know if you need further details! 😊"
+        },
+        "time": [
+          1779615824,
+          103420458
+        ]
+      }
+    ],
+    "startTime": [
+      1779615823,
+      651000000
+    ],
+    "endTime": [
+      1779615824,
+      103435583
+    ],
+    "status": {
+      "code": 1
+    },
+    "traceId": "f217d2968bd349cf0d6634e9a4dc8444",
+    "spanId": "27433f569e2fdd7a"
   }
 ]

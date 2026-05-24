@@ -1,7 +1,8 @@
 # `@agnost/sdk`
 
 A thin TypeScript pipe that gets AI agent conversations from the
-Vercel AI SDK, OpenAI SDK, and Mastra into Agnost via OpenTelemetry.
+Vercel AI SDK, OpenAI SDK, Mastra, and LangGraph into Agnost via
+OpenTelemetry.
 
 > **Status:** weekend prototype for an interview take-home. The OTel
 > GenAI semantic conventions this SDK rides are themselves marked
@@ -38,7 +39,7 @@ git clone <this-repo>
 cd agnost-sdk
 npm install                          # uses .npmrc (legacy-peer-deps)
 cp .env.example .env                 # add OPENAI_API_KEY (Groq key works)
-npm test                             # 38 tests, including the proof artifact
+npm test                             # 44 tests, including the proof artifact
 ```
 
 The import paths in the snippets below (`@agnost/sdk/vercel`, etc.)
@@ -109,6 +110,25 @@ const openai = wrapOpenAI(new OpenAI());
 // ... use `openai` normally; chat.completions.create now emits spans.
 ```
 
+### LangGraph
+
+LangGraph support is intentionally narrow: LangGraph plus Microsoft's
+`langchain-azure-ai` `AzureAIOpenTelemetryTracer` emits standard GenAI
+spans (`invoke_agent`, `chat`, `execute_tool`) that the existing mapper
+reads. The demo/capture scripts use that Python tracer directly. The
+TypeScript profile is thin identity stamping for JS/TS hosts that
+already emit those same OTel spans.
+
+```ts
+import { instrument } from "@agnost/sdk/langgraph";
+
+instrument({
+  apiKey: process.env.AGNOST_API_KEY!,
+  serviceName: "my-app",
+  captureContent: true,
+});
+```
+
 ### Don't know which to wire? Ask:
 
 ```bash
@@ -171,6 +191,21 @@ not an error.
 Interactive mode reuses the same pipe and agent. Type prompts at the
 `you>` prompt; use `/redact on`, `/redact off`, or `/exit`.
 
+### Live LangGraph demo — Azure tracer compatibility path
+
+`npm run demo:langgraph` runs a minimal LangGraph weather agent with
+`AzureAIOpenTelemetryTracer`, sends its real spans to the same mock
+ingest endpoint, and renders them in the viewer. This is not a
+LangSmith/OpenLLMetry path.
+
+```bash
+# Terminal 1:
+npm run ingest | npm run view
+
+# Terminal 2:
+npm run demo:langgraph
+```
+
 ### Capture-script demos (fixture generation)
 
 The capture scripts hit a real provider and dump the spans they emit
@@ -178,7 +213,7 @@ to `test/fixtures/*.spans.json`, then feed them through the same
 mapper the SDK uses:
 
 ```bash
-npm run capture:openai     # or capture:vercel / capture:mastra
+npm run capture:openai     # or capture:vercel / capture:mastra / capture:langgraph
 ```
 
 These are how the mapper test's "proof artifact" fixtures get
@@ -209,18 +244,18 @@ mock ingest → mapper → viewer) without any agent framework, see
 npm test
 ```
 
-Runs 38 tests across four files:
+Runs 44 tests across four files:
 
 | File | What it proves |
 | --- | --- |
-| `test/mapper.test.ts` | Real captured spans from all three frameworks map to identical canonical shape via one function. **The proof artifact for the architecture.** |
+| `test/mapper.test.ts` | Real captured spans from all four frameworks map to identical canonical shape via one function. **The proof artifact for the architecture.** |
 | `test/transport.test.ts` | OTLP exporter retries on 5xx, gives up cleanly, never throws on unreachable endpoint. |
 | `test/redact.test.ts` | Content-capture gate strips all framework content paths; pluggable redactor fires at the seam. |
 | `test/degradation.test.ts` | PRD §7 invariant: host process survives Agnost-down with zero uncaught exceptions or unhandled rejections. |
 
 The mapper fixtures are real OTel spans captured from each framework
 hitting a live provider, not hand-written. Re-capture with
-`npm run capture:openai|vercel|mastra` if conventions shift.
+`npm run capture:openai|vercel|mastra|langgraph` if conventions shift.
 
 ---
 

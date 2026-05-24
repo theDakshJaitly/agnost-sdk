@@ -10,6 +10,32 @@ Every entry shrinks as a framework adopts standard conventions. The
 mapper *code* does not change — only the tables shrink. That is what
 "config-driven, not branched" means in this codebase.
 
+For the generated, fixture-backed breakdown, see
+[`DIVERGENCE.md`](../DIVERGENCE.md). It is produced by
+`npm run divergence-report` from the real captured fixtures and the
+actual `spanToCanonical` mapper.
+
+Current headline numbers, in the build-story order:
+
+- **0 unrecognized spans across all four frameworks** — nothing fell
+  through unexpectedly.
+- **Vercel:** 4 spans; 0 known-internal lifecycle, 0 unrecognized;
+  required four attribute aliases, three operation-name patterns, three
+  tool aliases, and provider namespace normalization.
+- **Mastra:** 12 spans; 9 known-internal lifecycle spans
+  (`model_chunk`, `model_inference`, `model_step`), 0 unrecognized;
+  required the provider alias and tool-result alias.
+- **OpenAI:** 3 spans; 0 known-internal lifecycle, 0 unrecognized; no
+  aliases or operation-name fallbacks fired.
+- **LangGraph:** 10 spans; 0 known-internal lifecycle, 0 unrecognized;
+  no operation-name fallback, no provider normalization, only the
+  provider alias plus the `gen_ai.tool.call.result` tool-result alias.
+
+The difficulty metric is mapper/table change cost, not raw span count:
+Vercel forced the generic tables into existence, Mastra added standard
+content/provider/tool-result coverage, OpenAI is the baseline, and
+LangGraph reused the machinery with near-zero new shape work.
+
 ---
 
 ## OpenAI SDK (captured via `test/fixtures/capture-openai.ts`)
@@ -132,12 +158,12 @@ text-typed parts, so one parser handles both.
 
 ### 3. Rich agent-loop span hierarchy (the agent-span showcase)
 
-A single `agent.generate(...)` call produced 27 spans for our fixture:
-one `invoke_agent weather-agent`, one `chat <model>`, five
-`execute_tool weatherTool`, and the rest are Mastra-internal lifecycle
-markers (`model_chunk`, `model_inference`, `model_step`). Only the
-first three map to canonical events; the lifecycle markers correctly
-fall to `operation: "other"` and produce no turns.
+A single `agent.generate(...)` call produced 12 spans for the current
+fixture: one `invoke_agent weather-agent`, one `chat <model>`, one
+`execute_tool weatherTool`, and 9 Mastra-internal lifecycle markers
+(`model_chunk`, `model_inference`, `model_step`). Only the first three
+operation families carry canonical conversation signal; the lifecycle
+markers correctly fall to `operation: "other"` and produce no turns.
 
 This is exactly the agent seam the SDK wants to surface — intent at the
 agent level, not just at the inference level. Mastra emits it cleanly.
@@ -153,9 +179,56 @@ agent level, not just at the inference level. Mastra emits it cleanly.
 
 The bridge emits `[OtelBridge] No OTEL span found for Mastra span [id=...]`
 warnings during capture for a handful of internal spans that close before
-the bridge has registered them. The dumped fixture is unaffected (27
+the bridge has registered them. The dumped fixture is unaffected (12
 spans landed cleanly), but the noise is worth noting if it ever shows
 up in customer logs. Not currently filtered.
+
+## LangGraph (Python, OTel via `langchain-azure-ai`)
+
+The verified path is specifically LangGraph with Microsoft's
+`AzureAIOpenTelemetryTracer` callback from `langchain-azure-ai`, not
+LangSmith's native OpenTelemetry export path. The tracer emits GenAI
+semantic-convention spans that the existing mapper can read.
+
+### 1. Standard operation names, no new mapper branch
+
+The real fixture emitted 10 spans for one tool-using agent turn:
+`invoke_agent` wrappers for LangGraph/LangChain runnable nodes, two
+`chat` model calls, and one `execute_tool get_weather` span. Zero spans
+fell to `operation: "other"`.
+
+The happy-path loop is visible in the raw spans:
+
+- first `chat` decides to call `get_weather`;
+- `execute_tool get_weather` carries the call arguments and result;
+- second `chat` receives the tool result and writes the final assistant
+  answer into `gen_ai.output.messages`.
+
+### 2. Provider/model/token fields are standard
+
+LangGraph's Azure tracer emits `gen_ai.provider.name`,
+`gen_ai.request.model`, `gen_ai.response.model`,
+`gen_ai.usage.input_tokens`, and `gen_ai.usage.output_tokens`. The
+existing attribute alias for `gen_ai.provider.name` covers provider
+resolution. Against the Groq OpenAI-compatible endpoint, the provider
+still reports `openai` because that is the SDK adapter namespace.
+
+### 3. Turns use standard message attributes plus system instructions
+
+Conversation messages are JSON-encoded on `gen_ai.input.messages` and
+`gen_ai.output.messages` with the same `{ role, parts: [...] }` shape
+Mastra already exposed. LangGraph also puts the prompt on
+`gen_ai.system_instructions`, so the mapper now folds that standard
+attribute into a normal `system` turn.
+
+### 4. Tool result alias
+
+The tool span uses `gen_ai.tool.call.arguments` and
+`gen_ai.tool.call.result`. The arguments key was already covered; the
+result key needed one table entry alongside `gen_ai.tool.result`.
+
+Net result: LangGraph + Azure tracer required no framework-specific
+mapper branch, only two generic GenAI table/parser extensions.
 
 ---
 

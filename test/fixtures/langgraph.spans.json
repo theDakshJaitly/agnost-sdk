@@ -1,0 +1,255 @@
+[
+  {
+    "name": "invoke_agent Prompt",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "Prompt",
+      "metadata.langgraph_node": "agent",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "metadata.langgraph_path": "[\"__pregel_pull\", \"agent\"]",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}]"
+    },
+    "events": [],
+    "startTime": 1779611453563.143,
+    "endTime": 1779611453563.217,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "241b45c2cb5dad38",
+    "parentSpanId": "bb6195dfb7411c96"
+  },
+  {
+    "name": "chat qwen/qwen3-32b",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "chat",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.request.model": "qwen/qwen3-32b",
+      "gen_ai.request.temperature": 0.0,
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}]",
+      "gen_ai.system_instructions": "[{\"type\": \"text\", \"content\": \"You are a helpful weather assistant. Use the tool for weather questions, then summarize the result to the user.\"}]",
+      "gen_ai.tool.definitions": "[{\"type\": \"function\", \"function\": {\"name\": \"get_weather\", \"description\": \"Get current weather for a city.\", \"parameters\": {\"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}}}]",
+      "server.address": "api.groq.com",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "gen_ai.output.messages": "[{\"role\": \"assistant\", \"parts\": [{\"type\": \"tool_call\", \"id\": \"41wsf8wdn\", \"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]}]",
+      "gen_ai.output.type": "json",
+      "gen_ai.response.finish_reasons": "[\"tool_calls\"]",
+      "gen_ai.usage.input_tokens": 185,
+      "gen_ai.usage.output_tokens": 165,
+      "gen_ai.response.id": "chatcmpl-7bf9639a-f069-44ac-aaca-9010d1ece2ee",
+      "gen_ai.response.model": "qwen/qwen3-32b",
+      "openai.response.system_fingerprint": "fp_2bfcc54d36",
+      "openai.response.service_tier": "on_demand"
+    },
+    "events": [],
+    "startTime": 1779611453563.599,
+    "endTime": 1779611454174.812,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "a6a68bdffe79350a",
+    "parentSpanId": "bb6195dfb7411c96"
+  },
+  {
+    "name": "invoke_agent RunnableSequence",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "RunnableSequence",
+      "metadata.langgraph_node": "agent",
+      "metadata.langgraph_path": "[\"__pregel_pull\", \"agent\"]",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}]",
+      "gen_ai.system_instructions": "[{\"type\": \"text\", \"content\": \"You are a helpful weather assistant. Use the tool for weather questions, then summarize the result to the user.\"}]",
+      "gen_ai.tool.definitions": "[{\"type\": \"function\", \"function\": {\"name\": \"get_weather\", \"description\": \"Get current weather for a city.\", \"parameters\": {\"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}}}]",
+      "gen_ai.usage.input_tokens": 185,
+      "gen_ai.usage.output_tokens": 165
+    },
+    "events": [],
+    "startTime": 1779611453563.087,
+    "endTime": 1779611454175.056,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "bb6195dfb7411c96",
+    "parentSpanId": "b44e58b4c4e9974f"
+  },
+  {
+    "name": "invoke_agent call_model",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "call_model",
+      "metadata.langgraph_node": "agent",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "metadata.langgraph_path": "[\"__pregel_pull\", \"agent\"]",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}]"
+    },
+    "events": [],
+    "startTime": 1779611453562.958,
+    "endTime": 1779611454175.132,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "e74373661aab7607",
+    "parentSpanId": "b44e58b4c4e9974f"
+  },
+  {
+    "name": "execute_tool get_weather",
+    "kind": 0,
+    "attributes": {
+      "gen_ai.operation.name": "execute_tool",
+      "gen_ai.tool.name": "get_weather",
+      "gen_ai.tool.description": "Get current weather for a city.",
+      "gen_ai.tool.call.id": "41wsf8wdn",
+      "gen_ai.tool.call.arguments": "{\"city\": \"Paris\"}",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "gen_ai.tool.call.result": "{\"name\": \"get_weather\", \"tool_call_id\": \"41wsf8wdn\", \"content\": {\"city\": \"Paris\", \"temp_c\": 17, \"sky\": \"cloudy\"}}"
+    },
+    "events": [],
+    "startTime": 1779611454176.124,
+    "endTime": 1779611454176.518,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "193121967e2e836e",
+    "parentSpanId": "b44e58b4c4e9974f"
+  },
+  {
+    "name": "invoke_agent Prompt",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "Prompt",
+      "metadata.langgraph_node": "agent",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "metadata.langgraph_path": "[\"__pregel_pull\", \"agent\"]",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}, {\"role\": \"assistant\", \"parts\": [{\"type\": \"tool_call\", \"id\": \"41wsf8wdn\", \"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]}, {\"role\": \"tool\", \"parts\": [{\"type\": \"tool_call_response\", \"id\": \"41wsf8wdn\", \"result\": \"{\\\"city\\\": \\\"Paris\\\", \\\"temp_c\\\": 17, \\\"sky\\\": \\\"cloudy\\\"}\"}]}]"
+    },
+    "events": [],
+    "startTime": 1779611454177.556,
+    "endTime": 1779611454177.643,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "d9c9299746b2c8a3",
+    "parentSpanId": "06810db23a8e14b4"
+  },
+  {
+    "name": "chat qwen/qwen3-32b",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "chat",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.request.model": "qwen/qwen3-32b",
+      "gen_ai.request.temperature": 0.0,
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}, {\"role\": \"assistant\", \"parts\": [{\"type\": \"tool_call\", \"id\": \"41wsf8wdn\", \"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]}, {\"role\": \"tool\", \"parts\": [{\"type\": \"tool_call_response\", \"id\": \"41wsf8wdn\", \"result\": \"{\\\"city\\\": \\\"Paris\\\", \\\"temp_c\\\": 17, \\\"sky\\\": \\\"cloudy\\\"}\"}]}]",
+      "gen_ai.system_instructions": "[{\"type\": \"text\", \"content\": \"You are a helpful weather assistant. Use the tool for weather questions, then summarize the result to the user.\"}]",
+      "gen_ai.tool.definitions": "[{\"type\": \"function\", \"function\": {\"name\": \"get_weather\", \"description\": \"Get current weather for a city.\", \"parameters\": {\"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}}}]",
+      "server.address": "api.groq.com",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "gen_ai.output.messages": "[{\"role\": \"assistant\", \"parts\": [{\"type\": \"text\", \"content\": \"The current weather in Paris is 17\u00b0C with cloudy skies. Let me know if you need more details!\"}]}]",
+      "gen_ai.output.type": "text",
+      "gen_ai.response.finish_reasons": "[\"stop\"]",
+      "gen_ai.usage.input_tokens": 238,
+      "gen_ai.usage.output_tokens": 135,
+      "gen_ai.response.id": "chatcmpl-6afe1c91-126b-40bc-af3f-c0917a137154",
+      "gen_ai.response.model": "qwen/qwen3-32b",
+      "openai.response.system_fingerprint": "fp_5cf921caa2",
+      "openai.response.service_tier": "on_demand"
+    },
+    "events": [],
+    "startTime": 1779611454177.918,
+    "endTime": 1779611454546.81,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "6f12a0c2c25780ba",
+    "parentSpanId": "06810db23a8e14b4"
+  },
+  {
+    "name": "invoke_agent RunnableSequence",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "RunnableSequence",
+      "metadata.langgraph_node": "agent",
+      "metadata.langgraph_path": "[\"__pregel_pull\", \"agent\"]",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}, {\"role\": \"assistant\", \"parts\": [{\"type\": \"tool_call\", \"id\": \"41wsf8wdn\", \"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]}, {\"role\": \"tool\", \"parts\": [{\"type\": \"tool_call_response\", \"id\": \"41wsf8wdn\", \"result\": \"{\\\"city\\\": \\\"Paris\\\", \\\"temp_c\\\": 17, \\\"sky\\\": \\\"cloudy\\\"}\"}]}]",
+      "gen_ai.system_instructions": "[{\"type\": \"text\", \"content\": \"You are a helpful weather assistant. Use the tool for weather questions, then summarize the result to the user.\"}]",
+      "gen_ai.tool.definitions": "[{\"type\": \"function\", \"function\": {\"name\": \"get_weather\", \"description\": \"Get current weather for a city.\", \"parameters\": {\"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}}}]",
+      "gen_ai.usage.input_tokens": 238,
+      "gen_ai.usage.output_tokens": 135
+    },
+    "events": [],
+    "startTime": 1779611454177.446,
+    "endTime": 1779611454547.038,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "06810db23a8e14b4",
+    "parentSpanId": "b44e58b4c4e9974f"
+  },
+  {
+    "name": "invoke_agent call_model",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "call_model",
+      "metadata.langgraph_node": "agent",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "metadata.langgraph_path": "[\"__pregel_pull\", \"agent\"]",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}, {\"role\": \"assistant\", \"parts\": [{\"type\": \"tool_call\", \"id\": \"41wsf8wdn\", \"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]}, {\"role\": \"tool\", \"parts\": [{\"type\": \"tool_call_response\", \"id\": \"41wsf8wdn\", \"result\": \"{\\\"city\\\": \\\"Paris\\\", \\\"temp_c\\\": 17, \\\"sky\\\": \\\"cloudy\\\"}\"}]}]",
+      "gen_ai.output.messages": "[{\"role\": \"assistant\", \"parts\": [{\"type\": \"text\", \"content\": \"The current weather in Paris is 17\u00b0C with cloudy skies. Let me know if you need more details!\"}]}]"
+    },
+    "events": [],
+    "startTime": 1779611454177.161,
+    "endTime": 1779611454547.16,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "c6769e4df8203339",
+    "parentSpanId": "b44e58b4c4e9974f"
+  },
+  {
+    "name": "invoke_agent AzureAIOpenTelemetryTracer",
+    "kind": 2,
+    "attributes": {
+      "gen_ai.operation.name": "invoke_agent",
+      "gen_ai.agent.name": "AzureAIOpenTelemetryTracer",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.input.messages": "[{\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"content\": \"What's the weather in Paris today? My email is jane.doe@example.com.\"}]}, {\"role\": \"assistant\", \"parts\": [{\"type\": \"tool_call\", \"id\": \"41wsf8wdn\", \"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]}, {\"role\": \"tool\", \"parts\": [{\"type\": \"tool_call_response\", \"id\": \"41wsf8wdn\", \"result\": \"{\\\"city\\\": \\\"Paris\\\", \\\"temp_c\\\": 17, \\\"sky\\\": \\\"cloudy\\\"}\"}]}]",
+      "gen_ai.conversation.id": "capture-langgraph",
+      "gen_ai.usage.input_tokens": 423,
+      "gen_ai.usage.output_tokens": 300,
+      "gen_ai.output.messages": "[{\"role\": \"assistant\", \"parts\": [{\"type\": \"text\", \"content\": \"The current weather in Paris is 17\u00b0C with cloudy skies. Let me know if you need more details!\"}]}]"
+    },
+    "events": [],
+    "startTime": 1779611453561.957,
+    "endTime": 1779611454548.107,
+    "status": {
+      "code": 1
+    },
+    "traceId": "b1ef73cac3d92e03b38443f7fece3df9",
+    "spanId": "b44e58b4c4e9974f",
+    "parentSpanId": null
+  }
+]

@@ -82,7 +82,11 @@ function normalizeProvider(raw: string | undefined): string | undefined {
 // --- Tool-attribute aliases (used only when operation is execute_tool) -
 const TOOL_NAME_KEYS = ["gen_ai.tool.name", "ai.toolCall.name"];
 const TOOL_ARGS_ATTR_KEYS = ["gen_ai.tool.call.arguments", "ai.toolCall.args"];
-const TOOL_RESULT_KEYS = ["gen_ai.tool.result", "ai.toolCall.result"];
+const TOOL_RESULT_KEYS = [
+  "gen_ai.tool.result",
+  "gen_ai.tool.call.result",
+  "ai.toolCall.result",
+];
 
 // =====================================================================
 // Helpers
@@ -193,13 +197,13 @@ function eventToTurn(ev: ReadableSpanEvent): ConversationTurn | undefined {
   return { role, content };
 }
 
-// Flatten a message-content payload to a single string. Each framework
-// uses a slightly different field name for the textual body of a part:
+// Flatten a message-content payload to a single string. GenAI emitters
+// use a few field names for the textual body/result of a part:
 //   Vercel:  [{ type: "text", text: "..." }]
-//   Mastra:  [{ type: "text", content: "..." }]
+//   Standard:[{ type: "text", content: "..." }]
+//             [{ type: "tool_call_response", result: "..." }]
 //   String:  "..."
-// We try both `text` and `content`; unknown part types fall through to
-// raw_otel_attrs.
+// Unknown part types fall through to raw_otel_attrs.
 function flattenContentParts(content: unknown): string | undefined {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return undefined;
@@ -207,10 +211,12 @@ function flattenContentParts(content: unknown): string | undefined {
   for (const part of content) {
     if (typeof part === "string") out.push(part);
     else if (part && typeof part === "object") {
-      const p = part as { type?: unknown; text?: unknown; content?: unknown };
+      const p = part as { type?: unknown; text?: unknown; content?: unknown; result?: unknown };
       if (p.type === "text") {
         if (typeof p.text === "string") out.push(p.text);
         else if (typeof p.content === "string") out.push(p.content);
+      } else if (p.type === "tool_call_response" && typeof p.result === "string") {
+        out.push(p.result);
       }
     }
   }
@@ -223,10 +229,12 @@ function flattenContentParts(content: unknown): string | undefined {
 // already passed through the redaction seam (see redact.ts patterns) by
 // the time the mapper sees these attributes.
 //
-//   Vercel: `ai.prompt.messages`        — content: string | [{type, text}]
-//   Mastra: `gen_ai.input.messages`     — parts:   [{type, content}]
+//   Vercel:   `ai.prompt.messages`         — content: string | [{type, text}]
+//   Standard: `gen_ai.input.messages`      — parts:   [{type, content}]
+//             `gen_ai.system_instructions` — [{type, content}]
 const MESSAGE_ATTR_KEYS = ["ai.prompt.messages", "gen_ai.input.messages"];
 const ASSISTANT_OUTPUT_KEYS = ["gen_ai.output.messages"];
+const SYSTEM_INSTRUCTION_KEYS = ["gen_ai.system_instructions"];
 
 type RawMessage = {
   role?: unknown;
@@ -243,11 +251,22 @@ function rawMessageToTurn(m: RawMessage): ConversationTurn {
 }
 
 function turnsFromMessageAttr(attrs: Record<string, unknown>): ConversationTurn[] {
+  const systemTurns = turnsFromSystemInstructionAttr(attrs);
   for (const key of MESSAGE_ATTR_KEYS) {
     if (attrs[key] === undefined) continue;
     const parsed = safeJsonParse<RawMessage[]>(attrs[key], []);
     if (!Array.isArray(parsed) || parsed.length === 0) continue;
-    return parsed.map(rawMessageToTurn);
+    return [...systemTurns, ...parsed.map(rawMessageToTurn)];
+  }
+  return systemTurns;
+}
+
+function turnsFromSystemInstructionAttr(attrs: Record<string, unknown>): ConversationTurn[] {
+  for (const key of SYSTEM_INSTRUCTION_KEYS) {
+    if (attrs[key] === undefined) continue;
+    const parsed = safeJsonParse<unknown[]>(attrs[key], []);
+    const content = flattenContentParts(parsed);
+    if (content) return [{ role: "system", content }];
   }
   return [];
 }

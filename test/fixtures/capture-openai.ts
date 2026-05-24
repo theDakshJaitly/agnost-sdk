@@ -95,12 +95,24 @@ async function run(): Promise<void> {
     tools,
     tool_choice: "auto",
     temperature: 0,
-  })) as { choices?: { message?: { tool_calls?: { type?: string; function?: { name?: string; arguments?: string } }[] } }[] };
+  })) as {
+    choices?: {
+      message?: {
+        content?: string | null;
+        tool_calls?: {
+          id?: string;
+          type?: string;
+          function?: { name?: string; arguments?: string };
+        }[];
+      };
+    }[];
+  };
 
   // Emit a separate execute_tool span (agent seam). We synthesize this
   // because the OpenAI SDK itself doesn't run tools — agent frameworks do.
   const firstTool = completion.choices?.[0]?.message?.tool_calls?.[0];
   if (firstTool?.type === "function" && firstTool.function?.name) {
+    const toolResult = JSON.stringify({ city: "Paris", temp_c: 17, sky: "cloudy" });
     const toolSpan = tracer.startSpan(`execute_tool ${firstTool.function.name}`, {
       kind: SpanKind.INTERNAL,
       attributes: {
@@ -113,12 +125,37 @@ async function run(): Promise<void> {
       role: "tool",
       content: firstTool.function.arguments ?? "",
     });
-    toolSpan.setAttribute(
-      "gen_ai.tool.result",
-      JSON.stringify({ city: "Paris", temp_c: 17, sky: "cloudy" }),
-    );
+    toolSpan.setAttribute("gen_ai.tool.result", toolResult);
     toolSpan.setStatus({ code: SpanStatusCode.OK });
     toolSpan.end();
+
+    const assistantMessage = completion.choices?.[0]?.message;
+    await client.chat.completions.create({
+      model: MODEL,
+      messages: [
+        ...messages,
+        {
+          role: "assistant",
+          content: assistantMessage?.content ?? null,
+          tool_calls: [
+            {
+              id: firstTool.id ?? "call_demo_1",
+              type: "function",
+              function: {
+                name: firstTool.function.name,
+                arguments: firstTool.function.arguments ?? "{}",
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          tool_call_id: firstTool.id ?? "call_demo_1",
+          content: toolResult,
+        },
+      ],
+      temperature: 0,
+    });
   }
 
   // Rewrite the captured chat span's gen_ai.system to honest provider.

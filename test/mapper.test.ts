@@ -11,10 +11,10 @@ import type { CanonicalEvent, ReadableSpanLike } from "../src/core/schema.js";
 // hitting a real GenAI provider under an InMemorySpanExporter and dumping
 // the result.
 //
-// When Vercel + Mastra fixtures land in P1, adding them is a one-line
+// When new framework fixtures land, adding them is a one-line
 // append to the FIXTURES array — the cross-fixture structural-equivalence
-// test below then activates non-trivially and proves the single mapper
-// normalizes all three frameworks identically.
+// test below proves the single mapper normalizes every framework
+// identically.
 
 const FIXTURES_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
@@ -39,6 +39,11 @@ const FIXTURES: FixtureCase[] = [
     name: "mastra",
     file: "mastra.spans.json",
     captureScript: "npm run capture:mastra",
+  },
+  {
+    name: "langgraph",
+    file: "langgraph.spans.json",
+    captureScript: "npm run capture:langgraph",
   },
 ];
 

@@ -6,7 +6,7 @@
       "operation.name": "ai.generateText.doGenerate",
       "ai.operationId": "ai.generateText.doGenerate",
       "ai.model.provider": "openai.responses",
-      "ai.model.id": "llama-3.3-70b-versatile",
+      "ai.model.id": "qwen/qwen3-32b",
       "ai.settings.maxRetries": 2,
       "ai.telemetry.metadata.agnost.capture.provider": "groq",
       "ai.request.headers.user-agent": "ai/6.0.190",
@@ -16,45 +16,45 @@
       ],
       "ai.prompt.toolChoice": "{\"type\":\"auto\"}",
       "gen_ai.system": "openai.responses",
-      "gen_ai.request.model": "llama-3.3-70b-versatile",
+      "gen_ai.request.model": "qwen/qwen3-32b",
       "ai.response.finishReason": "tool-calls",
       "ai.response.reasoning": "",
-      "ai.response.toolCalls": "[{\"toolCallId\":\"dhk6cfc8m\",\"toolName\":\"get_weather\",\"input\":\"{\\\"city\\\":\\\"Paris\\\"}\"}]",
-      "ai.response.id": "resp_01ks7cbgd8ff9shfv6fwv6399z",
-      "ai.response.model": "llama-3.3-70b-versatile",
-      "ai.response.timestamp": "2026-05-22T08:20:43.000Z",
-      "ai.response.providerMetadata": "{\"openai\":{\"responseId\":\"resp_01ks7cbgd8ff9shfv6fwv6399z\",\"serviceTier\":\"default\"}}",
-      "ai.usage.inputTokens": 262,
-      "ai.usage.inputTokenDetails.noCacheTokens": 262,
+      "ai.response.toolCalls": "[{\"toolCallId\":\"2e8g2kawb\",\"toolName\":\"get_weather\",\"input\":\"{\\\"city\\\":\\\"Paris\\\"}\"}]",
+      "ai.response.id": "resp_01kscnwy9qef99qy31e34j0q9x",
+      "ai.response.model": "qwen/qwen3-32b",
+      "ai.response.timestamp": "2026-05-24T09:43:44.000Z",
+      "ai.response.providerMetadata": "{\"openai\":{\"responseId\":\"resp_01kscnwy9qef99qy31e34j0q9x\",\"serviceTier\":\"default\"}}",
+      "ai.usage.inputTokens": 199,
+      "ai.usage.inputTokenDetails.noCacheTokens": 199,
       "ai.usage.inputTokenDetails.cacheReadTokens": 0,
-      "ai.usage.outputTokens": 14,
-      "ai.usage.outputTokenDetails.textTokens": 14,
-      "ai.usage.outputTokenDetails.reasoningTokens": 0,
-      "ai.usage.totalTokens": 276,
-      "ai.usage.reasoningTokens": 0,
+      "ai.usage.outputTokens": 113,
+      "ai.usage.outputTokenDetails.textTokens": 24,
+      "ai.usage.outputTokenDetails.reasoningTokens": 89,
+      "ai.usage.totalTokens": 312,
+      "ai.usage.reasoningTokens": 89,
       "ai.usage.cachedInputTokens": 0,
       "gen_ai.response.finish_reasons": [
         "tool-calls"
       ],
-      "gen_ai.response.id": "resp_01ks7cbgd8ff9shfv6fwv6399z",
-      "gen_ai.response.model": "llama-3.3-70b-versatile",
-      "gen_ai.usage.input_tokens": 262,
-      "gen_ai.usage.output_tokens": 14
+      "gen_ai.response.id": "resp_01kscnwy9qef99qy31e34j0q9x",
+      "gen_ai.response.model": "qwen/qwen3-32b",
+      "gen_ai.usage.input_tokens": 199,
+      "gen_ai.usage.output_tokens": 113
     },
     "events": [],
     "startTime": [
-      1779438043,
-      282000000
+      1779615823,
+      615000000
     ],
     "endTime": [
-      1779438043,
-      688986958
+      1779615824,
+      307170042
     ],
     "status": {
       "code": 0
     },
-    "traceId": "57b2b0c25d35f0826a9458c0a26ef52b",
-    "spanId": "7d2783394b947c36"
+    "traceId": "f400c36f08492bc10b7e81eef28e3de3",
+    "spanId": "5f5c2e771cad2060"
   },
   {
     "name": "ai.toolCall",
@@ -63,24 +63,81 @@
       "operation.name": "ai.toolCall",
       "ai.operationId": "ai.toolCall",
       "ai.toolCall.name": "get_weather",
-      "ai.toolCall.id": "dhk6cfc8m",
+      "ai.toolCall.id": "2e8g2kawb",
       "ai.toolCall.args": "{\"city\":\"Paris\"}",
       "ai.toolCall.result": "{\"city\":\"Paris\",\"temp_c\":17,\"sky\":\"cloudy\"}"
     },
     "events": [],
     "startTime": [
-      1779438043,
-      690000000
+      1779615824,
+      307000000
     ],
     "endTime": [
-      1779438043,
-      690284000
+      1779615824,
+      307144125
     ],
     "status": {
       "code": 0
     },
-    "traceId": "326493c3042bafa71a620c5835abd257",
-    "spanId": "361de3fde59cb4e3"
+    "traceId": "6a2308ce032ab70af7100b3c3a16d39c",
+    "spanId": "e1547431ec26edff"
+  },
+  {
+    "name": "ai.generateText.doGenerate",
+    "kind": 0,
+    "attributes": {
+      "operation.name": "ai.generateText.doGenerate",
+      "ai.operationId": "ai.generateText.doGenerate",
+      "ai.model.provider": "openai.responses",
+      "ai.model.id": "qwen/qwen3-32b",
+      "ai.settings.maxRetries": 2,
+      "ai.telemetry.metadata.agnost.capture.provider": "groq",
+      "ai.request.headers.user-agent": "ai/6.0.190",
+      "ai.prompt.messages": "[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant. Use the tool when asked.\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What's the weather in Paris today? My email is jane.doe@example.com.\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"reasoning\",\"text\":\"\",\"providerOptions\":{\"openai\":{\"itemId\":\"resp_01kscnwy9qef9vavewj7b808qq\",\"reasoningEncryptedContent\":null}}},{\"type\":\"tool-call\",\"toolCallId\":\"2e8g2kawb\",\"toolName\":\"get_weather\",\"input\":{\"city\":\"Paris\"},\"providerOptions\":{\"openai\":{\"itemId\":\"2e8g2kawb\"}}}]},{\"role\":\"tool\",\"content\":[{\"type\":\"tool-result\",\"toolCallId\":\"2e8g2kawb\",\"toolName\":\"get_weather\",\"output\":{\"type\":\"json\",\"value\":{\"city\":\"Paris\",\"temp_c\":17,\"sky\":\"cloudy\"}},\"providerOptions\":{\"openai\":{\"itemId\":\"2e8g2kawb\"}}}]}]",
+      "ai.prompt.tools": [
+        "{\"type\":\"function\",\"name\":\"get_weather\",\"description\":\"Get current weather for a city.\",\"inputSchema\":{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"additionalProperties\":false}}"
+      ],
+      "ai.prompt.toolChoice": "{\"type\":\"auto\"}",
+      "gen_ai.system": "openai.responses",
+      "gen_ai.request.model": "qwen/qwen3-32b",
+      "ai.response.finishReason": "stop",
+      "ai.response.text": "The current weather in Paris is 17°C with cloudy skies. Let me know if you need additional details!",
+      "ai.response.reasoning": "",
+      "ai.response.id": "resp_01kscnwyyfefnsx0efdya3wxb6",
+      "ai.response.model": "qwen/qwen3-32b",
+      "ai.response.timestamp": "2026-05-24T09:43:44.000Z",
+      "ai.response.providerMetadata": "{\"openai\":{\"responseId\":\"resp_01kscnwyyfefnsx0efdya3wxb6\",\"serviceTier\":\"default\"}}",
+      "ai.usage.inputTokens": 223,
+      "ai.usage.inputTokenDetails.noCacheTokens": 223,
+      "ai.usage.inputTokenDetails.cacheReadTokens": 0,
+      "ai.usage.outputTokens": 176,
+      "ai.usage.outputTokenDetails.textTokens": 28,
+      "ai.usage.outputTokenDetails.reasoningTokens": 148,
+      "ai.usage.totalTokens": 399,
+      "ai.usage.reasoningTokens": 148,
+      "ai.usage.cachedInputTokens": 0,
+      "gen_ai.response.finish_reasons": [
+        "stop"
+      ],
+      "gen_ai.response.id": "resp_01kscnwyyfefnsx0efdya3wxb6",
+      "gen_ai.response.model": "qwen/qwen3-32b",
+      "gen_ai.usage.input_tokens": 223,
+      "gen_ai.usage.output_tokens": 176
+    },
+    "events": [],
+    "startTime": [
+      1779615824,
+      308000000
+    ],
+    "endTime": [
+      1779615824,
+      993324208
+    ],
+    "status": {
+      "code": 0
+    },
+    "traceId": "d80d145ed4325aa8b40a2f703d1170ba",
+    "spanId": "af037ac45820239a"
   },
   {
     "name": "ai.generateText",
@@ -89,38 +146,38 @@
       "operation.name": "ai.generateText",
       "ai.operationId": "ai.generateText",
       "ai.model.provider": "openai.responses",
-      "ai.model.id": "llama-3.3-70b-versatile",
+      "ai.model.id": "qwen/qwen3-32b",
       "ai.settings.maxRetries": 2,
       "ai.telemetry.metadata.agnost.capture.provider": "groq",
       "ai.request.headers.user-agent": "ai/6.0.190",
       "ai.prompt": "{\"system\":\"You are a helpful weather assistant. Use the tool when asked.\",\"prompt\":\"What's the weather in Paris today? My email is jane.doe@example.com.\"}",
-      "ai.response.finishReason": "tool-calls",
+      "ai.response.finishReason": "stop",
+      "ai.response.text": "The current weather in Paris is 17°C with cloudy skies. Let me know if you need additional details!",
       "ai.response.reasoning": "",
-      "ai.response.toolCalls": "[{\"toolCallId\":\"dhk6cfc8m\",\"toolName\":\"get_weather\",\"input\":\"{\\\"city\\\":\\\"Paris\\\"}\"}]",
-      "ai.response.providerMetadata": "{\"openai\":{\"responseId\":\"resp_01ks7cbgd8ff9shfv6fwv6399z\",\"serviceTier\":\"default\"}}",
-      "ai.usage.inputTokens": 262,
-      "ai.usage.inputTokenDetails.noCacheTokens": 262,
+      "ai.response.providerMetadata": "{\"openai\":{\"responseId\":\"resp_01kscnwyyfefnsx0efdya3wxb6\",\"serviceTier\":\"default\"}}",
+      "ai.usage.inputTokens": 422,
+      "ai.usage.inputTokenDetails.noCacheTokens": 422,
       "ai.usage.inputTokenDetails.cacheReadTokens": 0,
-      "ai.usage.outputTokens": 14,
-      "ai.usage.outputTokenDetails.textTokens": 14,
-      "ai.usage.outputTokenDetails.reasoningTokens": 0,
-      "ai.usage.totalTokens": 276,
-      "ai.usage.reasoningTokens": 0,
+      "ai.usage.outputTokens": 289,
+      "ai.usage.outputTokenDetails.textTokens": 52,
+      "ai.usage.outputTokenDetails.reasoningTokens": 237,
+      "ai.usage.totalTokens": 711,
+      "ai.usage.reasoningTokens": 237,
       "ai.usage.cachedInputTokens": 0
     },
     "events": [],
     "startTime": [
-      1779438043,
-      281000000
+      1779615823,
+      613000000
     ],
     "endTime": [
-      1779438043,
-      691023208
+      1779615824,
+      994296458
     ],
     "status": {
       "code": 0
     },
-    "traceId": "f91435506a208a25cc392ebe2df31b17",
-    "spanId": "d089aa9281ad3b0f"
+    "traceId": "81ee2a2fed3f3ea01747b6f773e30913",
+    "spanId": "aae0afef3cae8f19"
   }
 ]
