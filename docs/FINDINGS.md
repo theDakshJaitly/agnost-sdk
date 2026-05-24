@@ -64,14 +64,15 @@ Divergences from the canonical mapper assumptions: **none**.
 
 Multiple divergences. This is the framework that motivated the alias table.
 
-### 1. Three-span hierarchy per call (correctness trap)
+### 1. Wrapper + per-step inference hierarchy (correctness trap)
 
-A single `generateText({ tools })` invocation produces:
+The current full-loop `generateText({ tools, stopWhen: stepCountIs(2) })`
+fixture produces four spans:
 
 | Span name                         | Role                                       |
 | --------------------------------- | ------------------------------------------ |
 | `ai.generateText`                 | **Outer wrapper / agent loop.** Aggregates tokens and prompt across all model calls in the loop. Has no per-turn content. |
-| `ai.generateText.doGenerate`      | **Inner inference event.** Contains the actual prompt-messages + response. THIS is the chat span. |
+| `ai.generateText.doGenerate`      | **Inner inference event, one per model step.** The current fixture has two: one tool-decision chat and one final-answer chat. |
 | `ai.toolCall`                     | Tool execution, one per tool call.         |
 
 The naive mapping would treat both `ai.generateText` and
@@ -271,12 +272,14 @@ viewer / server can prioritize.
 
 ## How the tables defend "one mapper, config-driven"
 
-`src/core/mapper.ts` contains three data tables:
+`src/core/mapper.ts` keeps framework divergence in data tables and
+generic parsers:
 
 1. `OPERATION_NAME_PATTERNS` — span-name → `OperationKind`, ordered
    most-specific first.
 2. `ATTRIBUTE_ALIASES` — canonical-key → list of alias keys (read first match).
-3. `NAMESPACE_NORMALIZE` — provider-value-fixup for framework-internal lies.
+3. Provider-normalization suffixes — provider-value fixup for framework-internal lies.
+4. Tool/message key lists — standard and framework-adjacent spellings for tool fields and message attributes.
 
 The **consuming code** is identical regardless of which framework
 emitted the span. As frameworks adopt the standard conventions, entries

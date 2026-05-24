@@ -1,277 +1,148 @@
 # `@agnost/sdk`
 
-A thin TypeScript pipe that gets AI agent conversations from the
-Vercel AI SDK, OpenAI SDK, Mastra, and LangGraph into Agnost via
-OpenTelemetry.
+A thin TypeScript OpenTelemetry pipe that gets agent-framework telemetry into Agnost with near-zero friction: observe, tag, redact, ship.
 
-> **Status:** weekend prototype for an interview take-home. The OTel
-> GenAI semantic conventions this SDK rides are themselves marked
-> *Development* in the OTel spec — we bet on the direction and bridge
-> the gaps today. See [docs/FINDINGS.md](./docs/FINDINGS.md) for what
-> each framework actually emits in practice. The design reasoning
-> behind every choice is in [REASONING.md](./REASONING.md).
+`@agnost/sdk` is not a capture library. The frameworks already emit the useful spans; the job here is to ask developers for the smallest possible integration surface, keep Agnost out of the model-request hot path, preserve raw OTel as the ground-truth asset, and leave interpretation — stitching, clustering, intent, evals, dashboards — server-side where it can evolve without customer redeploys.
 
----
+`4 frameworks · 44 tests passing · TypeScript`
 
-## What it does
+> Weekend prototype for an interview take-home. OTel GenAI semantic conventions are still marked Development; this repo bets on the direction and documents the current gaps.
 
-The SDK does exactly four things:
+## Divergence Report
 
-1. **Observe** OTel spans your framework already emits.
-2. **Tag** them with identity (project, session, user, framework).
-3. **Redact** content optionally — opt-in capture + pluggable hook.
-4. **Ship** them to Agnost over OTLP/HTTP, with retry/backoff that
-   **never throws into your host agent**.
+![Divergence report: four frameworks, one mapper](assets/divergence-report.jpg)
 
-Everything else (conversation stitching, intent extraction, clustering,
-evals, dashboards) lives server-side, where it can iterate without a
-customer redeploy.
+Four frameworks normalized by one mapper — zero spans fell through unrecognized, and each new framework cost less than the last.
 
----
+The report is generated from real captured fixtures via `npm run divergence-report`, then mapped through the actual `spanToCanonical` implementation. Vercel forced the generic tables into existence; Mastra exercised richer agent lifecycle spans; OpenAI is the clean baseline; LangGraph reused the same machinery with near-zero new shape work.
 
-## Running this repo locally
+## Live Viewer
 
-`@agnost/sdk` is **not published to npm** — this is a take-home
-prototype. To run the demo:
+![Live agent loop in the viewer](assets/live-viewer.png)
+
+A real Mastra agent loop captured live — invoke_agent → chat → execute_tool, flowing through the SDK into the viewer.
+
+The demo runs a real agent against a real model, then sends live OTel through the SDK into the mock ingest server and terminal viewer. It shows both seams Agnost cares about: inference spans (`chat`) and agent-loop behavior (`invoke_agent`, `execute_tool`).
+
+## Quickstart
+
+`@agnost/sdk` is **not published to npm** yet. Run it from this repo. The current prototype is tested on Node `v22`; `npm install` uses the repo's `.npmrc` for peer-dependency compatibility.
 
 ```bash
 git clone <this-repo>
 cd agnost-sdk
-npm install                          # uses .npmrc (legacy-peer-deps)
-cp .env.example .env                 # add OPENAI_API_KEY (Groq key works)
-npm test                             # 44 tests, including the proof artifact
-```
-
-The import paths in the snippets below (`@agnost/sdk/vercel`, etc.)
-show the **intended public API** when this is eventually published.
-While running from the cloned repo, replace them with relative paths
-into `src/` for live experimentation — or use `npm link` to consume
-this checkout as if it were `@agnost/sdk` in another project.
-
-```bash
-export AGNOST_API_KEY=...
-```
-
-### Vercel AI SDK
-
-```ts
-import { instrument, telemetry } from "@agnost/sdk/vercel";
-import { generateText } from "ai";
-
-instrument({
-  apiKey: process.env.AGNOST_API_KEY!,
-  serviceName: "my-app",
-  captureContent: true,
-});
-
-await generateText({
-  model: ...,
-  prompt: "...",
-  experimental_telemetry: telemetry({ captureContent: true }),
-});
-```
-
-### Mastra
-
-```ts
-import { instrument, OtelBridge } from "@agnost/sdk/mastra";
-import { Observability } from "@mastra/observability";
-import { Mastra } from "@mastra/core";
-
-instrument({
-  apiKey: process.env.AGNOST_API_KEY!,
-  serviceName: "my-app",
-  captureContent: true,
-});
-
-new Mastra({
-  agents: { myAgent },
-  observability: new Observability({
-    configs: {
-      default: { serviceName: "my-app", bridge: new OtelBridge() },
-    },
-  }),
-});
-```
-
-### OpenAI SDK
-
-```ts
-import { instrument, wrapOpenAI } from "@agnost/sdk/openai";
-import OpenAI from "openai";
-
-instrument({
-  apiKey: process.env.AGNOST_API_KEY!,
-  serviceName: "my-app",
-  captureContent: true,
-});
-
-const openai = wrapOpenAI(new OpenAI());
-// ... use `openai` normally; chat.completions.create now emits spans.
-```
-
-### LangGraph
-
-LangGraph support is intentionally narrow: LangGraph plus Microsoft's
-`langchain-azure-ai` `AzureAIOpenTelemetryTracer` emits standard GenAI
-spans (`invoke_agent`, `chat`, `execute_tool`) that the existing mapper
-reads. The demo/capture scripts use that Python tracer directly. The
-TypeScript profile is thin identity stamping for JS/TS hosts that
-already emit those same OTel spans.
-
-```ts
-import { instrument } from "@agnost/sdk/langgraph";
-
-instrument({
-  apiKey: process.env.AGNOST_API_KEY!,
-  serviceName: "my-app",
-  captureContent: true,
-});
-```
-
-### Don't know which to wire? Ask:
-
-```bash
-# Locally (in this repo):
-npm run init
-
-# Once published, the same code would ship as:
-#   npx @agnost/init
-```
-
-Reads your `package.json`, prints the matching snippet. Lean by design
-— no codemod, no file mutation.
-
----
-
-## End-to-end demo (after `npm install`)
-
-### Live Mastra demo — full pipeline against a real agent
-
-`npm run demo:mastra` runs a real Mastra weather-agent against Groq
-(free) with spans flowing through the actual `instrument()` pipe →
-mock-ingest server → viewer. Both seams (`invoke_agent`, `chat`,
-`execute_tool`) render with real model/tokens/latency. Two passes:
-content visible, then redaction on — same PII question fired twice
-to make the privacy story visible rather than silent.
-
-This is deliberately pointed at a real agent/provider loop, not a
-polished transcript fixture. If Groq or the agent repeats a tool call
-or returns a provider `tool_use_failed` error, the viewer shows that
-signal instead of smoothing it over.
-
-```bash
-# Make sure .env has OPENAI_API_KEY (Groq key works), OPENAI_BASE_URL,
-# AGNOST_CAPTURE_MODEL — see .env.example.
-
-# Terminal 1 — mock Agnost backend + pretty terminal viewer:
-npm run ingest | npm run view
-
-# Terminal 2 — fire the agent:
-npm run demo:mastra
-
-# Optional interactive mode:
-npm run demo:mastra:repl
-```
-
-The viewer hides framework-internal lifecycle spans (Mastra's
-`model_step`, `model_chunk`, etc., which correctly map to
-operation `"other"`) by default — they're useful for debugging
-but flood the headline. Use `npm run view:all` to see every span
-including the suppressed internal ones (the data layer is always
-lossless; only the renderer filters).
-
-Transport failures log to stderr and are non-fatal by design — the
-agent completes regardless. If the mock server isn't running, the
-demo's spans get dropped with a quiet `[agnost] export failed` log,
-the agent still produces its model output, and the process exits
-cleanly. That's the SDK's never-throw invariant working as designed,
-not an error.
-
-Interactive mode reuses the same pipe and agent. Type prompts at the
-`you>` prompt; use `/redact on`, `/redact off`, or `/exit`.
-
-### Live LangGraph demo — Azure tracer compatibility path
-
-`npm run demo:langgraph` runs a minimal LangGraph weather agent with
-`AzureAIOpenTelemetryTracer`, sends its real spans to the same mock
-ingest endpoint, and renders them in the viewer. This is not a
-LangSmith/OpenLLMetry path.
-
-```bash
-# Terminal 1:
-npm run ingest | npm run view
-
-# Terminal 2:
-npm run demo:langgraph
-```
-
-### Capture-script demos (fixture generation)
-
-The capture scripts hit a real provider and dump the spans they emit
-to `test/fixtures/*.spans.json`, then feed them through the same
-mapper the SDK uses:
-
-```bash
-npm run capture:openai     # or capture:vercel / capture:mastra / capture:langgraph
-```
-
-These are how the mapper test's "proof artifact" fixtures get
-produced. Re-run them when the GenAI conventions shift.
-
-For the minimal end-to-end SDK loop (instrument → batch exporter →
-mock ingest → mapper → viewer) without any agent framework, see
-`test/e2e.ts`.
-
----
-
-## Privacy posture
-
-- `captureContent` defaults to **false**. Content is *stripped* from
-  spans before export — not redacted to a placeholder, removed entirely.
-- When you turn it on, you can pass a `redact: (text) => text` hook
-  that runs on every content string before it leaves the process.
-- The bundled `defaultRedactor` is a structured-PII catch only — it
-  matches emails, phone-shaped digits, and common API-key prefixes.
-  It is **not** a full PII solution. Production deployments should
-  supply their own redactor; the point is the hook at the right seam.
-
----
-
-## Tests
-
-```bash
+npm install
+cp .env.example .env
 npm test
 ```
 
-Runs 44 tests across four files:
+Add an API key/model endpoint to `.env`. Groq's OpenAI-compatible endpoint works with the included examples.
 
-| File | What it proves |
+```bash
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+AGNOST_CAPTURE_MODEL=qwen/qwen3-32b
+```
+
+The intended public API looks like this:
+
+```ts
+import { instrument } from "@agnost/sdk/mastra";
+
+instrument({
+  apiKey: process.env.AGNOST_API_KEY!,
+  serviceName: "my-agent",
+  captureContent: true,
+});
+```
+
+Run the live viewer in two terminals:
+
+```bash
+# Terminal 1 — mock Agnost backend + terminal viewer
+npm run ingest | npm run view
+```
+
+```bash
+# Terminal 2 — real Mastra agent demo
+npm run demo:mastra
+```
+
+Optional interactive mode:
+
+```bash
+npm run demo:mastra:repl
+```
+
+LangGraph demo and fixture capture use Python through `uv` because the verified path is Python LangGraph with `langchain-azure-ai`:
+
+```bash
+npm run demo:langgraph
+npm run capture:langgraph
+```
+
+## Onboarding
+
+`agnost-init` detects the framework from `package.json` and prints the right wiring snippet. It is deliberately a guide, not a codemod.
+
+![agnost-init framework detection](assets/agnost-init.png)
+
+```bash
+npm run init
+```
+
+## Content & Privacy
+
+![Redaction: PII captured then scrubbed](assets/redaction-before-after.png)
+
+Content capture is opt-in; when on, PII passes through a redaction seam before export — same conversation, before and after.
+
+`captureContent` defaults to `false`, which strips content-bearing attributes and events before export. Redaction is the one deliberate client-side step, because data cannot be scrubbed after it has already left the customer's process.
+
+## Supported Frameworks
+
+| Framework | Honest support path |
 | --- | --- |
-| `test/mapper.test.ts` | Real captured spans from all four frameworks map to identical canonical shape via one function. **The proof artifact for the architecture.** |
-| `test/transport.test.ts` | OTLP exporter retries on 5xx, gives up cleanly, never throws on unreachable endpoint. |
-| `test/redact.test.ts` | Content-capture gate strips all framework content paths; pluggable redactor fires at the seam. |
-| `test/degradation.test.ts` | PRD §7 invariant: host process survives Agnost-down with zero uncaught exceptions or unhandled rejections. |
+| Vercel AI SDK | Uses `experimental_telemetry` plus `@agnost/sdk/vercel`; Vercel emits wrapper/tool spans that the mapper normalizes through tables. |
+| Mastra | Uses `@mastra/otel-bridge` via `@agnost/sdk/mastra`; the live demo shows `invoke_agent`, `chat`, and `execute_tool` spans. |
+| OpenAI SDK | Uses `wrapOpenAI` from `@agnost/sdk/openai`; OpenAI itself does not run tools, so the fixture emits a separate tool span for the agent seam. |
+| LangGraph | Verified with Python LangGraph plus `langchain-azure-ai`'s `AzureAIOpenTelemetryTracer`; not the LangSmith/OpenLLMetry path, and not claimed as automatic out-of-the-box support. |
 
-The mapper fixtures are real OTel spans captured from each framework
-hitting a live provider, not hand-written. Re-capture with
-`npm run capture:openai|vercel|mastra|langgraph` if conventions shift.
+## Architecture
 
----
+![Architecture: thin client, server-side brains](assets/architecture.svg)
 
-## What this SDK explicitly does NOT do (this weekend)
+The client does four things — observe, tag, redact, ship. All interpretation lives server-side.
 
-- No conversation stitching, intent extraction, clustering, sentiment,
-  or evals — those happen server-side per the architecture.
-- No codemod / AST rewriting from `npx @agnost/init` — it prints a
-  snippet for you to paste.
-- No Python SDK.
-- No sampling / cost controls — handled server-side when cost actually bites.
-- No MCP server for agent self-analytics.
+For the deeper reasoning, see [docs/REASONING.md](docs/REASONING.md).
 
-All of these live in [REASONING.md](./REASONING.md) §"month, not weekend."
+## Docs & Artifacts
 
----
+- [docs/REASONING.md](docs/REASONING.md) — the architecture and tradeoffs.
+- [docs/FINDINGS.md](docs/FINDINGS.md) — per-framework divergence narrative.
+- [DIVERGENCE.md](DIVERGENCE.md) — generated mechanical breakdown from real fixtures.
+- [docs/DEMO_SPEC.md](docs/DEMO_SPEC.md) — live demo build notes.
+
+`DIVERGENCE.md` is generated by:
+
+```bash
+npm run divergence-report
+```
+
+## Scripts
+
+| Script | Purpose |
+| --- | --- |
+| `npm test` | Runs the 44-test suite. |
+| `npm run typecheck` | TypeScript typecheck only. |
+| `npm run build` | Builds `dist/`. |
+| `npm run ingest` | Starts the mock OTLP ingest server. |
+| `npm run view` | Pretty-prints canonical events from stdin. |
+| `npm run demo:mastra` | Runs the live Mastra demo. |
+| `npm run demo:mastra:repl` | Runs the interactive Mastra demo. |
+| `npm run demo:langgraph` | Runs the LangGraph Azure-tracer demo via `uv`. |
+| `npm run divergence-report` | Regenerates `DIVERGENCE.md` from fixtures. |
+| `npm run init` | Prints framework-specific onboarding snippets. |
 
 ## License
 
